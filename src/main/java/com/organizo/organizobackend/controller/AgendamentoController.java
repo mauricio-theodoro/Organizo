@@ -2,6 +2,7 @@ package com.organizo.organizobackend.controller;
 
 import com.organizo.organizobackend.dto.AgendamentoDTO;
 import com.organizo.organizobackend.service.AgendamentoService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -44,7 +45,7 @@ public class AgendamentoController {
     /** Cliente cria agendamento */
     @PreAuthorize("hasRole('CLIENTE')")
     @PostMapping("/agendamentos")
-    public ResponseEntity<AgendamentoDTO> criar(@RequestBody AgendamentoDTO dto) {
+    public ResponseEntity<AgendamentoDTO> criar(@Valid @RequestBody AgendamentoDTO dto) {
         return ResponseEntity.status(201).body(service.criar(dto));
     }
 

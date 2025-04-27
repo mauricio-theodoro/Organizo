@@ -1,5 +1,9 @@
 package com.organizo.organizobackend.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 
 /**
@@ -9,10 +13,22 @@ import java.time.LocalDateTime;
 public class ClienteDTO {
 
     private Long id;
+
+    @NotBlank(message = "nome é obrigatório")
+    @Size(max = 50, message = "nome não pode exceder 50 caracteres")
     private String nome;
+
+    @NotBlank(message = "sobrenome é obrigatório")
+    @Size(max = 50, message = "sobrenome não pode exceder 50 caracteres")
     private String sobrenome;
+
+    @NotBlank(message = "email é obrigatório")
+    @Email(message = "email deve ser válido")
     private String email;
+
+    @Size(max = 20, message = "telefone não pode exceder 20 caracteres")
     private String telefone;
+
     private LocalDateTime criadoEm;
     private LocalDateTime atualizadoEm;
 

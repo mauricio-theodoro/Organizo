@@ -3,23 +3,26 @@ package com.organizo.organizobackend.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * Dados para registro de novo usuário.
  */
 public class RegistroRequest {
 
-    @NotBlank @Email
+    @NotBlank(message = "email é obrigatório")
+    @Email(message = "email deve ser válido")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "senha é obrigatória")
+    @Size(min = 6, message = "senha deve ter pelo menos 6 caracteres")
     private String senha;
 
-    @NotBlank
+    @NotBlank(message = "nome é obrigatório")
     private String nome;
 
-    @NotNull
-    private String role;    // recebido como String, mapeado para Role enum
+    @NotNull(message = "role é obrigatório")
+    private String role;
 
     public RegistroRequest() { }
 

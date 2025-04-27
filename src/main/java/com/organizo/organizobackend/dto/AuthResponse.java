@@ -1,14 +1,25 @@
 package com.organizo.organizobackend.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 /**
  * Resposta com token JWT e informações do usuário.
  */
 public class AuthResponse {
 
+    @NotBlank
     private String token;
+
+    @NotBlank
+    @Email
     private String email;
+
+    @NotBlank
     private String nome;
-    private String role;  // novo
+
+    @NotBlank
+    private String role;
 
     public AuthResponse() { }
 

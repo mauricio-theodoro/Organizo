@@ -2,6 +2,7 @@ package com.organizo.organizobackend.controller;
 
 import com.organizo.organizobackend.dto.ClienteDTO;
 import com.organizo.organizobackend.service.ClienteService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,7 +43,7 @@ public class ClienteController {
     /** Qualquer um pode se cadastrar como cliente */
     @PreAuthorize("permitAll()")
     @PostMapping
-    public ResponseEntity<ClienteDTO> criar(@RequestBody ClienteDTO dto) {
+    public ResponseEntity<ClienteDTO> criar(@Valid @RequestBody ClienteDTO dto) {
         ClienteDTO criado = service.criar(dto);
         return ResponseEntity.status(201).body(criado);
     }
