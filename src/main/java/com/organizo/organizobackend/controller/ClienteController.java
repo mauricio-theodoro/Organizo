@@ -31,12 +31,16 @@ public class ClienteController {
     }
 
     /** GET /api/clientes/{id} */
+    /** Somente CLIENTE pode ver seu próprio cadastro */
+    @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping("/{id}")
     public ResponseEntity<ClienteDTO> buscar(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 
     /** POST /api/clientes */
+    /** Qualquer um pode se cadastrar como cliente */
+    @PreAuthorize("permitAll()")
     @PostMapping
     public ResponseEntity<ClienteDTO> criar(@RequestBody ClienteDTO dto) {
         ClienteDTO criado = service.criar(dto);
@@ -44,6 +48,7 @@ public class ClienteController {
     }
 
     /** DELETE /api/clientes/{id} */
+    @PreAuthorize("hasRole('CLIENTE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
         service.deletar(id);

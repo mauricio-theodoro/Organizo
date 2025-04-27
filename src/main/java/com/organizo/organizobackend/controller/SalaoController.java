@@ -5,7 +5,8 @@ import com.organizo.organizobackend.dto.SalaoDTO;
 import com.organizo.organizobackend.service.SalaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.security.access.prepost.PreAuthorize;
+
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -20,28 +21,35 @@ public class SalaoController {
     private SalaoService salaoService;
 
     /** Lista todos os salões */
+    /** Qualquer um (ou Cliente) pode ver salões */
+    @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<List<SalaoDTO>> listar() {
-        return ResponseEntity.ok(salaoService.listarTodos());
+        return ResponseEntity.ok(service.listarTodos());
     }
 
     /** Busca salão por ID */
+    /** Qualquer um pode ver detalhes do salão */
+    @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public ResponseEntity<SalaoDTO> buscar(@PathVariable Long id) {
-        return ResponseEntity.ok(salaoService.buscarPorId(id));
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    /** Cria novo salão */
+    /** Apenas DONO_SALAO pode criar um salão */
+    @PreAuthorize("hasRole('DONO_SALAO')")
     @PostMapping
-    public ResponseEntity<SalaoDTO> criar(@Validated @RequestBody SalaoDTO dto) {
-        SalaoDTO criado = salaoService.criar(dto);
+    public ResponseEntity<SalaoDTO> criar(@RequestBody SalaoDTO dto) {
+        SalaoDTO criado = service.criar(dto);
         return ResponseEntity.status(201).body(criado);
     }
 
     /** Deleta salão */
+    /** Apenas DONO_SALAO pode deletar seu salão */
+    @PreAuthorize("hasRole('DONO_SALAO')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        salaoService.deletar(id);
+        service.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }
