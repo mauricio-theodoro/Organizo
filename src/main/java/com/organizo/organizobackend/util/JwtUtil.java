@@ -1,41 +1,46 @@
+// src/main/java/com/organizo/organizobackend/util/JwtUtil.java
 package com.organizo.organizobackend.util;
 
-import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Value;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Claims;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 
 /**
- * Gera e valida tokens JWT usando HS256.
+ * Gera e valida tokens JWT usando HS256 com chave forte (≥256 bits).
  */
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:segredo123}")
-    private String secret;
+    // Gera uma chave forte para HS256 (256 bits) no startup:
+    private final SecretKey key = Keys.secretKeyFor(io.jsonwebtoken.SignatureAlgorithm.HS256);
 
-    @Value("${jwt.expiration-ms:3600000}")
-    private long expirationMs;
+    // Validade em milissegundos (1 hora)
+    private final long expirationMs = 3600_000;
 
-    /** Gera um token para o subject (e-mail). */
+    /** Gera um token com subject=email. */
     public String gerarToken(String subject) {
-        Date agora = new Date();
-        Date exp = new Date(agora.getTime() + expirationMs);
+        Date now = new Date();
         return Jwts.builder()
                 .setSubject(subject)
-                .setIssuedAt(agora)
-                .setExpiration(exp)
-                .signWith(SignatureAlgorithm.HS256, secret)
+                .setIssuedAt(now)
+                .setExpiration(new Date(now.getTime() + expirationMs))
+                .signWith(key)
                 .compact();
     }
 
-    /** Extrai o e-mail (subject) do token. */
+    /** Extrai o subject (email) do token. */
     public String obterEmail(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
+        JwtParser parser = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build();
+        Claims claims = parser
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
+        return claims.getSubject();
     }
 }
