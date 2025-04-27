@@ -1,45 +1,36 @@
 package com.organizo.organizobackend.config;
 
+import com.organizo.organizobackend.config.JwtAuthFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuração de segurança da aplicação.
+ * Utiliza JWT para proteger endpoints e deixa públicos somente os necessários.
+ */
 @Configuration
 public class SecurityConfig {
 
+    @Autowired
+    private JwtAuthFilter jwtAuthFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Desabilita CSRF para facilitar testes no Postman
-                .csrf(csrf -> csrf.disable())
-
-                // Define quem pode acessar o quê
+        http.csrf(csrf -> csrf.disable())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Liberar GET em todos os recursos de API
-                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
-
-                        // Liberar POST apenas para criar clientes
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/servicos/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/clientes").permitAll()
-
-                        // **Liberar DELETE para clientes** (para testar remoção)
-                        .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").permitAll()
-
-                        // Agora liberamos CRUD de Agendamento:
-                        .requestMatchers(HttpMethod.GET,    "/api/agendamentos/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,    "/api/clientes/*/agendamentos").permitAll()
-                        .requestMatchers(HttpMethod.GET,    "/api/profissionais/*/agendamentos").permitAll()
-                        .requestMatchers(HttpMethod.POST,   "/api/agendamentos").permitAll()
-                        .requestMatchers(HttpMethod.PUT,    "/api/agendamentos/**").permitAll()
-                        // Outras rotas continuam protegidas
                         .anyRequest().authenticated()
                 )
-
-                // Para rotas autenticadas, usar HTTP Basic (no futuro trocaremos por JWT)
-                .httpBasic(Customizer.withDefaults());
-
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

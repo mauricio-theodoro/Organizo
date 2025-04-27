@@ -4,6 +4,7 @@ import com.organizo.organizobackend.dto.ClienteDTO;
 import com.organizo.organizobackend.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class ClienteController {
     }
 
     /** GET /api/clientes */
+    @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping
     public ResponseEntity<List<ClienteDTO>> listar() {
         return ResponseEntity.ok(service.listarTodos());
