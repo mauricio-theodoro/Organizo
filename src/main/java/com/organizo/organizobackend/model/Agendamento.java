@@ -2,7 +2,6 @@ package com.organizo.organizobackend.model;
 
 import com.organizo.organizobackend.enums.StatusAgendamento;
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
 
 /**
@@ -10,38 +9,99 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "agendamento")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Agendamento {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne @JoinColumn(name = "cliente_id", nullable = false)
-    private Cliente cliente;            // Quem agendou
+    private Cliente cliente;
 
     @ManyToOne @JoinColumn(name = "profissional_id", nullable = false)
-    private Profissional profissional;  // Quem irá atender
+    private Profissional profissional;
 
     @ManyToOne @JoinColumn(name = "servico_id", nullable = false)
-    private Servico servico;            // Qual serviço
+    private Servico servico;
 
     @Column(name = "data_hora_agendada", nullable = false)
     private LocalDateTime dataHoraAgendada;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private StatusAgendamento status;   // Ex: PENDENTE, CONFIRMADO
+    @Column(nullable = false, length = 20)
+    private StatusAgendamento status;
 
-    @Column(name = "criado_em", updatable = false)
+    @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
-    @Column(name = "atualizado_em")
+    @Column(name = "atualizado_em", nullable = false)
     private LocalDateTime atualizadoEm;
 
-    @PrePersist protected void prePersist() {
-        criadoEm = LocalDateTime.now(); atualizadoEm = criadoEm;
+    public Agendamento() { }
+
+    // ===== Getters e Setters =====
+
+    public Long getId() {
+        return id;
     }
-    @PreUpdate  protected void preUpdate()  {
-        atualizadoEm = LocalDateTime.now();
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+    public void setCliente(Cliente cliente) {
+        this.cliente = cliente;
+    }
+
+    public Profissional getProfissional() {
+        return profissional;
+    }
+    public void setProfissional(Profissional profissional) {
+        this.profissional = profissional;
+    }
+
+    public Servico getServico() {
+        return servico;
+    }
+    public void setServico(Servico servico) {
+        this.servico = servico;
+    }
+
+    public LocalDateTime getDataHoraAgendada() {
+        return dataHoraAgendada;
+    }
+    public void setDataHoraAgendada(LocalDateTime dataHoraAgendada) {
+        this.dataHoraAgendada = dataHoraAgendada;
+    }
+
+    public StatusAgendamento getStatus() {
+        return status;
+    }
+    public void setStatus(StatusAgendamento status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public LocalDateTime getAtualizadoEm() {
+        return atualizadoEm;
+    }
+
+    // ===== Hooks JPA =====
+
+    @PrePersist
+    protected void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.criadoEm = now;
+        this.atualizadoEm = now;
+        if (this.status == null) {
+            this.status = StatusAgendamento.PENDENTE;
+        }
+    }
+
+    @PreUpdate
+    protected void preUpdate() {
+        this.atualizadoEm = LocalDateTime.now();
     }
 }
