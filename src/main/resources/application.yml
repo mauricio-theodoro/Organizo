@@ -9,10 +9,10 @@ spring:
     show-sql: true
 
   mail:
-    host: smtp.mailtrap.io
+    host: sandbox.smtp.mailtrap.io
     port: 2525
-    username: MAILTRAP_USERNAME   # <– substitua pelo seu usuário Mailtrap
-    password: MAILTRAP_PASSWORD   # <– substitua pela sua senha Mailtrap
+    username: a4ba6720f4eb7b
+    password: fe5579309a75ca
     default-encoding: UTF-8
     properties:
       mail:
