@@ -1,16 +1,15 @@
 package com.organizo.organizobackend.model;
 
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Profissional que trabalha em um salão e oferece serviços.
+ * Representa um profissional que trabalha em um salão e oferece serviços.
  */
 @Entity
 @Table(name = "profissional")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Profissional {
 
     @Id
@@ -23,31 +22,100 @@ public class Profissional {
     @Column(nullable = false, length = 50)
     private String sobrenome;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
+    @Column(length = 20)
     private String telefone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "salao_id", nullable = false)
-    private Salao salao;           // FK para o salão onde trabalha
+    private Salao salao;
 
-    @ManyToMany
-    @JoinTable(name = "profissional_servico",
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "profissional_servico",
             joinColumns = @JoinColumn(name = "profissional_id"),
-            inverseJoinColumns = @JoinColumn(name = "servico_id"))
-    private Set<Servico> servicos;  // Serviços que este profissional oferece
+            inverseJoinColumns = @JoinColumn(name = "servico_id")
+    )
+    private Set<Servico> servicos = new HashSet<>();
 
-    @Column(name = "criado_em", updatable = false)
+    @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
 
-    @Column(name = "atualizado_em")
+    @Column(name = "atualizado_em", nullable = false)
     private LocalDateTime atualizadoEm;
 
-    @PrePersist protected void prePersist() {
-        criadoEm = LocalDateTime.now(); atualizadoEm = criadoEm;
+    /** Construtor padrão exigido pelo JPA */
+    public Profissional() { }
+
+    // ===================== GETTERS e SETTERS =====================
+
+    public Long getId() {
+        return id;
     }
-    @PreUpdate  protected void preUpdate()  {
-        atualizadoEm = LocalDateTime.now();
+
+    public String getNome() {
+        return nome;
+    }
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getSobrenome() {
+        return sobrenome;
+    }
+    public void setSobrenome(String sobrenome) {
+        this.sobrenome = sobrenome;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+    public void setTelefone(String telefone) {
+        this.telefone = telefone;
+    }
+
+    public Salao getSalao() {
+        return salao;
+    }
+    public void setSalao(Salao salao) {
+        this.salao = salao;
+    }
+
+    public Set<Servico> getServicos() {
+        return servicos;
+    }
+    public void setServicos(Set<Servico> servicos) {
+        this.servicos = servicos;
+    }
+
+    public LocalDateTime getCriadoEm() {
+        return criadoEm;
+    }
+
+    public LocalDateTime getAtualizadoEm() {
+        return atualizadoEm;
+    }
+
+    // ===================== HOOKS DE PERSISTÊNCIA =====================
+
+    @PrePersist
+    protected void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+        this.criadoEm = now;
+        this.atualizadoEm = now;
+    }
+
+    @PreUpdate
+    protected void preUpdate() {
+        this.atualizadoEm = LocalDateTime.now();
     }
 }
