@@ -3,6 +3,9 @@ package com.organizo.organizobackend.service.impl;
 import com.organizo.organizobackend.dto.AgendamentoDTO;
 import com.organizo.organizobackend.enums.StatusAgendamento;
 import com.organizo.organizobackend.model.Agendamento;
+import com.organizo.organizobackend.model.Cliente;
+import com.organizo.organizobackend.model.Profissional;
+import com.organizo.organizobackend.model.Servico;
 import com.organizo.organizobackend.repository.AgendamentoRepository;
 import com.organizo.organizobackend.repository.ClienteRepository;
 import com.organizo.organizobackend.repository.ProfissionalRepository;
@@ -11,11 +14,13 @@ import com.organizo.organizobackend.service.AgendamentoService;
 import com.organizo.organizobackend.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Implementação da lógica de negócio para Agendamento.
+ * Implementação da lógica de negócio para Agendamento,
+ * mapeando DTO para entidade, salvando e enviando notificações.
  */
 @Service
 public class AgendamentoServiceImpl implements AgendamentoService {
@@ -54,12 +59,27 @@ public class AgendamentoServiceImpl implements AgendamentoService {
 
     @Override
     public AgendamentoDTO criar(AgendamentoDTO dto) {
-        // ... criação do agendamento como antes ...
+        // Mapeia DTO para entidade
+        Cliente cliente = clienteRepo.findById(dto.getClienteId())
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+        Profissional profissional = profRepo.findById(dto.getProfissionalId())
+                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
+        Servico servico = servRepo.findById(dto.getServicoId())
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+
+        Agendamento ag = new Agendamento();
+        ag.setCliente(cliente);
+        ag.setProfissional(profissional);
+        ag.setServico(servico);
+        ag.setDataHoraAgendada(dto.getDataHoraAgendada());
+        ag.setStatus(StatusAgendamento.PENDENTE);
+
+        // Persiste no banco
         Agendamento salvo = agRepo.save(ag);
 
-        // NOTIFICAÇÃO por e-mail ao cliente
+        // Envia notificações por e-mail
         String textoCliente = String.format(
-                "Olá %s,\n\nSeu agendamento para %s às %s foi criado com sucesso!%n\nObrigado.",
+                "Olá %s,\n\nSeu agendamento para %s às %s foi criado com sucesso!\n\nObrigado.",
                 salvo.getCliente().getNome(),
                 salvo.getServico().getNome(),
                 salvo.getDataHoraAgendada().toString()
@@ -70,9 +90,8 @@ public class AgendamentoServiceImpl implements AgendamentoService {
                 textoCliente
         );
 
-        // NOTIFICAÇÃO ao profissional
         String textoProf = String.format(
-                "Olá %s,\n\nVocê tem um novo agendamento para %s no dia %s às %s.%n\nVerifique sua agenda.",
+                "Olá %s,\n\nVocê tem um novo agendamento para %s no dia %s às %s.\n\nVerifique sua agenda.",
                 salvo.getProfissional().getNome(),
                 salvo.getServico().getNome(),
                 salvo.getDataHoraAgendada().toLocalDate(),
@@ -103,6 +122,7 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         return toDTO(agRepo.save(ag));
     }
 
+    /** Converte entidade Agendamento em DTO */
     private AgendamentoDTO toDTO(Agendamento ag) {
         AgendamentoDTO dto = new AgendamentoDTO();
         dto.setId(ag.getId());
