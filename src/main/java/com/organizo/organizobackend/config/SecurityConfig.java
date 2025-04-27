@@ -13,28 +13,25 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Desabilita CSRF pra facilitar testes com Postman
+                // Desabilita CSRF para facilitar testes no Postman
                 .csrf(csrf -> csrf.disable())
 
-                // Configura quais rotas ficam liberadas sem login
+                // Define quem pode acessar o quê
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                HttpMethod.GET,   "/api/clientes/**",
-                                "/api/servicos/**",
-                                "/api/profissionais/**",
-                                "/api/saloes/**"
-                        ).permitAll()
+                        // Liberar GET em todos os recursos de API
+                        .requestMatchers(HttpMethod.GET, "/api/**").permitAll()
 
-                        // Libera o POST para criar cliente sem autenticação
-                        .requestMatchers(
-                                HttpMethod.POST, "/api/clientes"
-                        ).permitAll()
+                        // Liberar POST apenas para criar clientes
+                        .requestMatchers(HttpMethod.POST, "/api/clientes").permitAll()
 
-                        // Todas as outras rotas requerem autenticação (no futuro)
+                        // **Liberar DELETE para clientes** (para testar remoção)
+                        .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").permitAll()
+
+                        // Outras rotas continuam protegidas
                         .anyRequest().authenticated()
                 )
 
-                // Habilita autenticação HTTP Basic para as rotas protegidas
+                // Para rotas autenticadas, usar HTTP Basic (no futuro trocaremos por JWT)
                 .httpBasic(Customizer.withDefaults());
 
         return http.build();
