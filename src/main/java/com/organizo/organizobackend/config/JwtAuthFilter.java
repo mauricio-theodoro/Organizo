@@ -5,6 +5,7 @@ import com.organizo.organizobackend.util.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * Intercepta cada requisição, extrai e valida o JWT no header Authorization.
@@ -36,12 +37,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = header.substring(7);
             try {
                 String email = jwtUtil.obterEmail(token);
-                // Se não estiver autenticado ainda
                 if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    // Busca o usuário e sua role
                     repo.findByEmail(email).ifPresent(user -> {
+                        // Converte Role em GrantedAuthority
+                        List<SimpleGrantedAuthority> authorities = List.of(
+                                new SimpleGrantedAuthority("ROLE_" + user.getRole().name())
+                        );
+
                         UsernamePasswordAuthenticationToken auth =
                                 new UsernamePasswordAuthenticationToken(
-                                        email, null, Collections.emptyList()
+                                        email,
+                                        null,
+                                        authorities
                                 );
                         auth.setDetails(new WebAuthenticationDetailsSource()
                                 .buildDetails(req));
@@ -49,7 +57,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     });
                 }
             } catch (JwtException ex) {
-                // token inválido ou expirado; ignore e prossiga sem auth
+                // token inválido ou expirado; prossegue sem autenticação
             }
         }
         chain.doFilter(req, res);
