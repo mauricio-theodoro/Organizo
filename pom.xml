@@ -69,6 +69,12 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- Notificações por e-mail -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 		<!-- jjwt-impl e jjwt-jackson runtimes -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

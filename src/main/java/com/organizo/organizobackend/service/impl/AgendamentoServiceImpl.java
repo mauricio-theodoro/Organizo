@@ -8,6 +8,7 @@ import com.organizo.organizobackend.repository.ClienteRepository;
 import com.organizo.organizobackend.repository.ProfissionalRepository;
 import com.organizo.organizobackend.repository.ServicoRepository;
 import com.organizo.organizobackend.service.AgendamentoService;
+import com.organizo.organizobackend.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -19,10 +20,16 @@ import java.util.stream.Collectors;
 @Service
 public class AgendamentoServiceImpl implements AgendamentoService {
 
-    @Autowired private AgendamentoRepository agRepo;
-    @Autowired private ClienteRepository clienteRepo;
-    @Autowired private ProfissionalRepository profRepo;
-    @Autowired private ServicoRepository servRepo;
+    @Autowired
+    private AgendamentoRepository agRepo;
+    @Autowired
+    private ClienteRepository clienteRepo;
+    @Autowired
+    private ProfissionalRepository profRepo;
+    @Autowired
+    private ServicoRepository servRepo;
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public List<AgendamentoDTO> listarTodos() {
@@ -47,21 +54,36 @@ public class AgendamentoServiceImpl implements AgendamentoService {
 
     @Override
     public AgendamentoDTO criar(AgendamentoDTO dto) {
-        var cliente = clienteRepo.findById(dto.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-        var prof = profRepo.findById(dto.getProfissionalId())
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
-        var serv = servRepo.findById(dto.getServicoId())
-                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
-
-        Agendamento ag = new Agendamento();
-        ag.setCliente(cliente);
-        ag.setProfissional(prof);
-        ag.setServico(serv);
-        ag.setDataHoraAgendada(dto.getDataHoraAgendada());
-        // status PENDENTE será aplicado no prePersist se nulo
-
+        // ... criação do agendamento como antes ...
         Agendamento salvo = agRepo.save(ag);
+
+        // NOTIFICAÇÃO por e-mail ao cliente
+        String textoCliente = String.format(
+                "Olá %s,\n\nSeu agendamento para %s às %s foi criado com sucesso!%n\nObrigado.",
+                salvo.getCliente().getNome(),
+                salvo.getServico().getNome(),
+                salvo.getDataHoraAgendada().toString()
+        );
+        emailService.sendSimpleMessage(
+                salvo.getCliente().getEmail(),
+                "Agendamento Confirmado",
+                textoCliente
+        );
+
+        // NOTIFICAÇÃO ao profissional
+        String textoProf = String.format(
+                "Olá %s,\n\nVocê tem um novo agendamento para %s no dia %s às %s.%n\nVerifique sua agenda.",
+                salvo.getProfissional().getNome(),
+                salvo.getServico().getNome(),
+                salvo.getDataHoraAgendada().toLocalDate(),
+                salvo.getDataHoraAgendada().toLocalTime()
+        );
+        emailService.sendSimpleMessage(
+                salvo.getProfissional().getEmail(),
+                "Novo Agendamento",
+                textoProf
+        );
+
         return toDTO(salvo);
     }
 
