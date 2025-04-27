@@ -1,13 +1,12 @@
 package com.organizo.organizobackend.controller;
 
-
 import com.organizo.organizobackend.dto.SalaoDTO;
 import com.organizo.organizobackend.service.SalaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 /**
@@ -20,36 +19,47 @@ public class SalaoController {
     @Autowired
     private SalaoService salaoService;
 
-    /** Lista todos os salões */
-    /** Qualquer um (ou Cliente) pode ver salões */
+    /**
+     * Lista todos os salões.
+     * Qualquer usuário pode acessar.
+     */
     @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<List<SalaoDTO>> listar() {
-        return ResponseEntity.ok(service.listarTodos());
+        List<SalaoDTO> lista = salaoService.listarTodos();
+        return ResponseEntity.ok(lista);
     }
 
-    /** Busca salão por ID */
-    /** Qualquer um pode ver detalhes do salão */
+    /**
+     * Busca um salão por ID.
+     * Qualquer usuário pode acessar detalhes.
+     */
     @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public ResponseEntity<SalaoDTO> buscar(@PathVariable Long id) {
-        return ResponseEntity.ok(service.buscarPorId(id));
+        SalaoDTO dto = salaoService.buscarPorId(id);
+        return ResponseEntity.ok(dto);
     }
 
-    /** Apenas DONO_SALAO pode criar um salão */
+    /**
+     * Cria um novo salão.
+     * Apenas usuário com role DONO_SALAO pode criar.
+     */
     @PreAuthorize("hasRole('DONO_SALAO')")
     @PostMapping
     public ResponseEntity<SalaoDTO> criar(@RequestBody SalaoDTO dto) {
-        SalaoDTO criado = service.criar(dto);
+        SalaoDTO criado = salaoService.criar(dto);
         return ResponseEntity.status(201).body(criado);
     }
 
-    /** Deleta salão */
-    /** Apenas DONO_SALAO pode deletar seu salão */
+    /**
+     * Deleta um salão existente.
+     * Apenas usuário com role DONO_SALAO pode deletar.
+     */
     @PreAuthorize("hasRole('DONO_SALAO')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        service.deletar(id);
+        salaoService.deletar(id);
         return ResponseEntity.noContent().build();
     }
 }
