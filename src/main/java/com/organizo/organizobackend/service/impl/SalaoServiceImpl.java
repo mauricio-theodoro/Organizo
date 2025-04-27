@@ -12,8 +12,7 @@ import java.util.stream.Collectors;
 
 /**
  * Implementação da camada de serviço para Salão,
- * contendo lógica de negócio e conversão entre
- * entidade e DTO.
+ * agora tratando o campo CNPJ.
  */
 @Service
 public class SalaoServiceImpl implements SalaoService {
@@ -25,9 +24,6 @@ public class SalaoServiceImpl implements SalaoService {
         this.salaoRepo = salaoRepo;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public List<SalaoDTO> listarTodos() {
         return salaoRepo.findAll()
@@ -36,9 +32,6 @@ public class SalaoServiceImpl implements SalaoService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SalaoDTO buscarPorId(Long id) {
         Salao salao = salaoRepo.findById(id)
@@ -48,42 +41,35 @@ public class SalaoServiceImpl implements SalaoService {
         return toDTO(salao);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public SalaoDTO criar(SalaoDTO dto) {
-        // Converte DTO em entidade
+        // Converte DTO em entidade, agora incluindo CNPJ
         Salao salao = new Salao();
         salao.setNome(dto.getNome());
+        salao.setCnpj(dto.getCnpj());
         salao.setEndereco(dto.getEndereco());
         salao.setTelefone(dto.getTelefone());
 
         // Persiste no banco
         Salao salvo = salaoRepo.save(salao);
 
-        // Retorna DTO com campos atualizados (ID, timestamps)
+        // Converte de volta para DTO
         return toDTO(salvo);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void deletar(Long id) {
-        // Caso não exista, JpaRepository lançará EmptyResultDataAccessException
         salaoRepo.deleteById(id);
     }
 
     /**
-     * Converte entidade Salao em DTO.
-     * @param salao entidade JPA
-     * @return objeto SalaoDTO
+     * Converte entidade Salao em DTO, incluindo CNPJ.
      */
     private SalaoDTO toDTO(Salao salao) {
         SalaoDTO dto = new SalaoDTO();
         dto.setId(salao.getId());
         dto.setNome(salao.getNome());
+        dto.setCnpj(salao.getCnpj());
         dto.setEndereco(salao.getEndereco());
         dto.setTelefone(salao.getTelefone());
         dto.setCriadoEm(salao.getCriadoEm());

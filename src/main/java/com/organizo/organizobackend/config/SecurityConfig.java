@@ -27,6 +27,12 @@ public class SecurityConfig {
                         // **Liberar DELETE para clientes** (para testar remoção)
                         .requestMatchers(HttpMethod.DELETE, "/api/clientes/**").permitAll()
 
+                        // Agora liberamos CRUD de Agendamento:
+                        .requestMatchers(HttpMethod.GET,    "/api/agendamentos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,    "/api/clientes/*/agendamentos").permitAll()
+                        .requestMatchers(HttpMethod.GET,    "/api/profissionais/*/agendamentos").permitAll()
+                        .requestMatchers(HttpMethod.POST,   "/api/agendamentos").permitAll()
+                        .requestMatchers(HttpMethod.PUT,    "/api/agendamentos/**").permitAll()
                         // Outras rotas continuam protegidas
                         .anyRequest().authenticated()
                 )
