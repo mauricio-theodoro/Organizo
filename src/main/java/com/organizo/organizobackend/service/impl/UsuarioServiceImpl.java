@@ -35,9 +35,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public AuthResponse registrar(RegistroRequest dto) {
+        Optional<Usuario> existente = repo.findByEmail(dto.getEmail());
         if (repo.findByEmail(dto.getEmail()).isPresent()) {
             throw new RuntimeException("E-mail já cadastrado");
         }
+
+        // Converte string de role para enum
         Role papel = Role.valueOf(dto.getRole());
         Usuario u = new Usuario(dto.getEmail(), encoder.encode(dto.getSenha()), dto.getNome(), papel);
         Usuario salvo = repo.save(u);
@@ -53,6 +56,6 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RuntimeException("Senha inválida");
         }
         String token = jwtUtil.gerarToken(u.getEmail());
-        return new AuthResponse(token, u.getEmail(), u.getNome());
+        return new AuthResponse(token, u.getEmail(), u.getNome(), u.getRole().name());
     }
 }
