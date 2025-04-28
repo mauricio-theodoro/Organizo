@@ -26,28 +26,33 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // auth endpoints
+                        // 1) Toda spec e JSON do OpenAPI
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+
+                        // 2) Os recursos do Swagger UI (HTML, JS, CSS, fontes…)
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/swagger-ui/index.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
+
+                        // libere o endpoint de erro (fallback do Spring)
+                        .requestMatchers("/error").permitAll()
+
+                        // 3) Seus endpoints públicos
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-
-                        // public GETs
-                        .requestMatchers(HttpMethod.GET, "/api/servicos/**", "/api/saloes/**").permitAll()
-
-                        // registro de cliente e agendamento
+                        .requestMatchers(HttpMethod.GET,  "/api/servicos/**", "/api/saloes/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/clientes", "/api/agendamentos").permitAll()
 
-                        // endpoints por role
-                        .requestMatchers(HttpMethod.GET, "/api/clientes/**")
-                        .hasRole("CLIENTE")
-                        .requestMatchers(HttpMethod.GET, "/api/profissionais/**")
-                        .hasRole("PROFISSIONAL")
-                        .requestMatchers(HttpMethod.GET, "/api/saloes/**")
-                        .hasRole("DONO_SALAO")
+                        // 4) Demais regras por role…
+                        .requestMatchers(HttpMethod.GET,  "/api/clientes/**").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET,  "/api/profissionais/**").hasRole("PROFISSIONAL")
+                        .requestMatchers(HttpMethod.GET,  "/api/saloes/**").hasRole("DONO_SALAO")
+                        .requestMatchers(HttpMethod.PUT,  "/api/agendamentos/**").hasRole("CLIENTE")
 
-                        // operações de agendamento só para cliente
-                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/**")
-                        .hasRole("CLIENTE")
-
-                        // restantes requerem autenticação
+                        // 5) Todo o resto precisa estar autenticado
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
