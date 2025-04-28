@@ -2,6 +2,8 @@ package com.organizo.organizobackend.controller;
 
 import com.organizo.organizobackend.dto.AgendamentoDTO;
 import com.organizo.organizobackend.service.AgendamentoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import java.util.List;
 /**
  * Endpoints REST para manipular Agendamentos.
  */
+@Tag(name = "Agendamentos", description = "Operações de agendamento de serviços")
 @RestController
 @RequestMapping("/api")
 public class AgendamentoController {
@@ -19,6 +22,7 @@ public class AgendamentoController {
     @Autowired private AgendamentoService service;
 
     /** GET /api/agendamentos */
+    @Operation(summary = "Lista todos os agendamentos")
     @GetMapping("/agendamentos")
     public ResponseEntity<List<AgendamentoDTO>> listarTodos() {
         return ResponseEntity.ok(service.listarTodos());
@@ -26,6 +30,7 @@ public class AgendamentoController {
 
     /** GET /api/clientes/{id}/agendamentos */
     /** Cliente lista seus agendamentos */
+    @Operation(summary = "Lista agendamentos de um cliente", description = "Somente CLIENTE")
     @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping("/clientes/{id}/agendamentos")
     public ResponseEntity<List<AgendamentoDTO>> listarPorCliente(@PathVariable Long id) {
@@ -34,6 +39,7 @@ public class AgendamentoController {
 
     /** GET /api/profissionais/{id}/agendamentos */
     /** Profissional lista agendamentos */
+    @Operation(summary = "Lista agendamentos de um profissional", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
     @GetMapping("/profissionais/{id}/agendamentos")
     public ResponseEntity<List<AgendamentoDTO>> listarPorProfissional(@PathVariable Long id) {
@@ -43,6 +49,7 @@ public class AgendamentoController {
 
     /** POST /api/agendamentos */
     /** Cliente cria agendamento */
+    @Operation(summary = "Cria um novo agendamento", description = "Cliente agenda um serviço com data futura")
     @PreAuthorize("hasRole('CLIENTE')")
     @PostMapping("/agendamentos")
     public ResponseEntity<AgendamentoDTO> criar(@Valid @RequestBody AgendamentoDTO dto) {
@@ -51,6 +58,7 @@ public class AgendamentoController {
 
     /** PUT /api/agendamentos/{id}/confirmar */
     /** Cliente confirma */
+    @Operation(summary = "Confirma agendamento", description = "Somente CLIENTE")
     @PreAuthorize("hasRole('CLIENTE')")
     @PutMapping("/agendamentos/{id}/confirmar")
     public ResponseEntity<AgendamentoDTO> confirmar(@PathVariable Long id) {
@@ -58,6 +66,7 @@ public class AgendamentoController {
     }
 
     /** Cliente cancela */
+    @Operation(summary = "Cancela agendamento", description = "Somente CLIENTE")
     @PreAuthorize("hasRole('CLIENTE')")
     @PutMapping("/agendamentos/{id}/cancelar")
     public ResponseEntity<AgendamentoDTO> cancelar(@PathVariable Long id) {

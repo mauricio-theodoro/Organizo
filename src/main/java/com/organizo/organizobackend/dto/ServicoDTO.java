@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -11,20 +12,26 @@ import java.math.BigDecimal;
  * DTO para transferência de dados de Servico
  * entre client e servidor, sem expor a entidade JPA.
  */
+@Schema(name = "ServicoDTO", description = "Dados de um serviço oferecido pelo salão")
 public class ServicoDTO {
 
+    @Schema(description = "ID do serviço", example = "2")
     private Long id;
 
+    @Schema(description = "Nome do serviço", required = true, example = "Corte de cabelo")
     @NotBlank(message = "nome é obrigatório")
     private String nome;
 
+    @Schema(description = "Descrição detalhada", required = true, example = "Corte estilizado e secagem")
     @NotBlank(message = "descricao é obrigatório")
     private String descricao;
 
+    @Schema(description = "Duração em minutos", required = true, example = "45")
     @NotNull(message = "duracaoMinutos é obrigatório")
     @Min(value = 1, message = "duracaoMinutos deve ser pelo menos 1 minuto")
     private Integer duracaoMinutos;
 
+    @Schema(description = "Preço do serviço", required = true, example = "80.50")
     @NotNull(message = "preco é obrigatório")
     @DecimalMin(value = "0.0", inclusive = false, message = "preco deve ser positivo")
     private BigDecimal preco;

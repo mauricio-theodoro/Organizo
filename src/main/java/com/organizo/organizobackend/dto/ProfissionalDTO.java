@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,30 +12,39 @@ import java.time.LocalDateTime;
  * DTO para Profissional.
  * Transfere dados básicos e identificador do salão.
  */
+@Schema(name = "ProfissionalDTO", description = "Dados de um profissional e vínculo com salão")
 public class ProfissionalDTO {
 
-
+    @Schema(description = "ID do profissional", example = "3")
     private Long id;
 
+    @Schema(description = "Nome do profissional", required = true, example = "Ana")
     @NotBlank(message = "nome é obrigatório")
     @Size(max = 50, message = "nome não pode exceder 50 caracteres")
     private String nome;
 
+    @Schema(description = "Sobrenome do profissional", required = true, example = "Silva")
     @NotBlank(message = "sobrenome é obrigatório")
     @Size(max = 50, message = "sobrenome não pode exceder 50 caracteres")
     private String sobrenome;
 
+    @Schema(description = "Email de contato", required = true, example = "ana@ex.com")
     @NotBlank(message = "email é obrigatório")
     @Email(message = "email deve ser válido")
     private String email;
 
+    @Schema(description = "Telefone de contato", example = "31999990000")
     @Size(max = 20, message = "telefone não pode exceder 20 caracteres")
     private String telefone;
 
+    @Schema(description = "ID do salão onde trabalha", required = true, example = "1")
     @NotNull(message = "salaoId é obrigatório")
     private Long salaoId;
 
+    @Schema(description = "Data de criação do registro")
     private LocalDateTime criadoEm;
+
+    @Schema(description = "Data de última atualização do registro")
     private LocalDateTime atualizadoEm;
 
     // Getters e Setters

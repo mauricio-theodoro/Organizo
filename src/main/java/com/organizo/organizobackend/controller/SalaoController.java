@@ -2,6 +2,8 @@ package com.organizo.organizobackend.controller;
 
 import com.organizo.organizobackend.dto.SalaoDTO;
 import com.organizo.organizobackend.service.SalaoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import java.util.List;
 /**
  * Endpoints REST para manipular Salões.
  */
+@Tag(name = "Salões", description = "Gerenciamento de salões de beleza")
 @RestController
 @RequestMapping("/api/saloes")
 public class SalaoController {
@@ -24,6 +27,7 @@ public class SalaoController {
      * Lista todos os salões.
      * Qualquer usuário pode acessar.
      */
+    @Operation(summary = "Lista todos os salões", description = "Público")
     @PreAuthorize("permitAll()")
     @GetMapping
     public ResponseEntity<List<SalaoDTO>> listar() {
@@ -35,6 +39,7 @@ public class SalaoController {
      * Busca um salão por ID.
      * Qualquer usuário pode acessar detalhes.
      */
+    @Operation(summary = "Busca salão por ID", description = "Público")
     @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public ResponseEntity<SalaoDTO> buscar(@PathVariable Long id) {
@@ -46,6 +51,7 @@ public class SalaoController {
      * Cria um novo salão.
      * Apenas usuário com role DONO_SALAO pode criar.
      */
+    @Operation(summary = "Cria um novo salão", description = "Somente DONO_SALAO")
     @PreAuthorize("hasRole('DONO_SALAO')")
     @PostMapping
     public ResponseEntity<SalaoDTO> criar(@Valid @RequestBody SalaoDTO dto) {
@@ -57,6 +63,7 @@ public class SalaoController {
      * Deleta um salão existente.
      * Apenas usuário com role DONO_SALAO pode deletar.
      */
+    @Operation(summary = "Deleta um salão", description = "Somente DONO_SALAO")
     @PreAuthorize("hasRole('DONO_SALAO')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {

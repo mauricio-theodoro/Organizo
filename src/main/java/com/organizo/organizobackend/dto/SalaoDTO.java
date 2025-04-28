@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -9,25 +10,34 @@ import java.time.LocalDateTime;
  * DTO para transferência de dados de Salão,
  * agora incluindo o campo cnpj.
  */
+@Schema(name = "SalaoDTO", description = "Dados de um salão de beleza")
 public class SalaoDTO {
 
+    @Schema(description = "ID do salão", example = "1")
     private Long id;
 
+    @Schema(description = "Nome do salão", required = true, example = "Beleza Pura")
     @NotBlank(message = "nome é obrigatório")
     @Size(max = 100, message = "nome não pode exceder 100 caracteres")
     private String nome;
 
+    @Schema(description = "CNPJ do salão", required = true, example = "12345678000199")
     @NotBlank(message = "cnpj é obrigatório")
     @Size(min = 14, max = 18, message = "cnpj deve ter tamanho válido")
     private String cnpj;
 
+    @Schema(description = "Endereço completo", required = true, example = "Rua das Flores, 123")
     @NotBlank(message = "endereco é obrigatório")
     private String endereco;
 
+    @Schema(description = "Telefone de contato", example = "31911112222")
     @Size(max = 20, message = "telefone não pode exceder 20 caracteres")
     private String telefone;
 
+    @Schema(description = "Data de criação do registro")
     private LocalDateTime criadoEm;
+
+    @Schema(description = "Data de última atualização do registro")
     private LocalDateTime atualizadoEm;
 
     // ===== Getters & Setters =====
