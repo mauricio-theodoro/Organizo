@@ -1,10 +1,13 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.SalaoDTO;
+import com.organizo.organizobackend.mapper.SalaoMapper;
 import com.organizo.organizobackend.model.Salao;
 import com.organizo.organizobackend.repository.SalaoRepository;
 import com.organizo.organizobackend.service.SalaoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,13 +21,16 @@ import java.util.stream.Collectors;
 public class SalaoServiceImpl implements SalaoService {
 
     private final SalaoRepository salaoRepo;
+    private final SalaoMapper mapper;
 
     @Autowired
-    public SalaoServiceImpl(SalaoRepository salaoRepo) {
+    public SalaoServiceImpl(SalaoRepository salaoRepo, SalaoMapper mapper) {
         this.salaoRepo = salaoRepo;
+        this.mapper = mapper;
     }
 
     @Override
+    @Cacheable(value = "saloes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public List<SalaoDTO> listarTodos() {
         return salaoRepo.findAll()
                 .stream()
@@ -42,6 +48,7 @@ public class SalaoServiceImpl implements SalaoService {
     }
 
     @Override
+    @CacheEvict(value = "saloes", allEntries = true)
     public SalaoDTO criar(SalaoDTO dto) {
         // Converte DTO em entidade, agora incluindo CNPJ
         Salao salao = new Salao();
@@ -58,6 +65,7 @@ public class SalaoServiceImpl implements SalaoService {
     }
 
     @Override
+    @CacheEvict(value = "saloes", allEntries = true)
     public void deletar(Long id) {
         salaoRepo.deleteById(id);
     }

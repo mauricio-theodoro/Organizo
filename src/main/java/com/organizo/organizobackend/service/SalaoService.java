@@ -4,8 +4,8 @@ import com.organizo.organizobackend.dto.SalaoDTO;
 import java.util.List;
 
 /**
- * Contrato da camada de serviço para Salão.
- * Define operações de CRUD e listagem de salões.
+ * Contrato da camada de serviço para Salão,
+ * agora com paginação.
  */
 public interface SalaoService {
 
