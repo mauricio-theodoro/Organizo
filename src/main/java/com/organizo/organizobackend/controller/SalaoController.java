@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,10 +33,10 @@ public class SalaoController {
     @Operation(summary = "Lista todos os salões", description = "Público")
     @PreAuthorize("permitAll()")
     @GetMapping
-    public ResponseEntity<List<SalaoDTO>> listar(
+    public ResponseEntity<Page<SalaoDTO>> listar(
             @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
-        List<SalaoDTO> lista = salaoService.listarTodos();
-        return ResponseEntity.ok(lista);
+        Page<SalaoDTO> pagina = salaoService.listar(pageable);
+        return ResponseEntity.ok(pagina);
     }
 
     /**
