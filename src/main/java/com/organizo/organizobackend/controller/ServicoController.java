@@ -5,6 +5,8 @@ import com.organizo.organizobackend.service.ServicoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,12 +29,12 @@ public class ServicoController {
 
     /**
      * GET /api/servicos
-     * @return lista de todos os serviços
+     * Retorna página de serviços.
      */
-    @Operation(summary = "Lista todos os serviços", description = "Público")
+    @Operation(summary = "Lista serviços paginados", description = "Parâmetros: page, size, sort")
     @GetMapping
-    public ResponseEntity<List<ServicoDTO>> listar() {
-        return ResponseEntity.ok(servicoService.listarTodos());
+    public ResponseEntity<Page<ServicoDTO>> listar(Pageable pageable) {
+        return ResponseEntity.ok(servicoService.listar(pageable));
     }
 
     /**

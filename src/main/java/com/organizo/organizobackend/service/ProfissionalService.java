@@ -1,6 +1,9 @@
 package com.organizo.organizobackend.service;
 
 import com.organizo.organizobackend.dto.ProfissionalDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 /**
@@ -9,15 +12,15 @@ import java.util.List;
 public interface ProfissionalService {
 
     /**
-     * Lista todos os profissionais de todos os salões.
+     * Lista profissionais paginados.
      */
-    List<ProfissionalDTO> listarTodos();
+    Page<ProfissionalDTO> listar(Pageable pageable);
 
     /**
      * Lista profissionais de um salão específico.
      * @param salaoId ID do salão
      */
-    List<ProfissionalDTO> listarPorSalao(Long salaoId);
+    Page<ProfissionalDTO> listarPorSalao(Long salaoId, Pageable pageable);
 
     /**
      * Busca um profissional pelo seu ID.

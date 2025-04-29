@@ -1,10 +1,15 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.ClienteDTO;
+import com.organizo.organizobackend.mapper.ClienteMapper;
 import com.organizo.organizobackend.model.Cliente;
 import com.organizo.organizobackend.repository.ClienteRepository;
 import com.organizo.organizobackend.service.ClienteService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,54 +23,53 @@ import java.util.stream.Collectors;
 public class ClienteServiceImpl implements ClienteService {
 
     private final ClienteRepository repo;
+    private final ClienteMapper mapper;
 
     @Autowired
-    public ClienteServiceImpl(ClienteRepository repo) {
+    public ClienteServiceImpl(ClienteRepository repo, ClienteMapper mapper) {
         this.repo = repo;
+        this.mapper = mapper;
     }
 
+    /**
+     * Lista clientes paginados com cache.
+     */
     @Override
-    public List<ClienteDTO> listarTodos() {
-        return repo.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    @Cacheable(value = "clientes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    public Page<ClienteDTO> listar(Pageable pageable) {
+        return repo.findAll(pageable)
+                .map(mapper::toDto);
     }
 
+    /**
+     * Busca cliente por ID e armazena em cache.
+     */
     @Override
+    @Cacheable(value = "clientes", key = "#id")
     public ClienteDTO buscarPorId(Long id) {
         Cliente c = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado: " + id));
-        return toDTO(c);
+        return mapper.toDto(c);
     }
 
+    /**
+     * Cria novo cliente e limpa cache de lista.
+     */
     @Override
+    @CacheEvict(value = "clientes", allEntries = true)
     public ClienteDTO criar(ClienteDTO dto) {
-        // Converte DTO em entidade
-        Cliente c = new Cliente();
-        c.setNome(dto.getNome());
-        c.setSobrenome(dto.getSobrenome());
-        c.setEmail(dto.getEmail());
-        c.setTelefone(dto.getTelefone());
-        // Persiste e retorna DTO atualizado (com ID e timestamps)
+        Cliente c = mapper.toEntity(dto);
         Cliente salvo = repo.save(c);
-        return toDTO(salvo);
+        return mapper.toDto(salvo);
     }
 
+    /**
+     * Deleta cliente por ID e limpa cache.
+     */
     @Override
+    @CacheEvict(value = "clientes", allEntries = true)
     public void deletar(Long id) {
         repo.deleteById(id);
     }
 
-    /** Converte entidade Cliente em DTO */
-    private ClienteDTO toDTO(Cliente c) {
-        ClienteDTO dto = new ClienteDTO();
-        dto.setId(c.getId());
-        dto.setNome(c.getNome());
-        dto.setSobrenome(c.getSobrenome());
-        dto.setEmail(c.getEmail());
-        dto.setTelefone(c.getTelefone());
-        dto.setCriadoEm(c.getCriadoEm());
-        dto.setAtualizadoEm(c.getAtualizadoEm());
-        return dto;
-    }
 }

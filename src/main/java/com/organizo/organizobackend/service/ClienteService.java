@@ -1,6 +1,9 @@
 package com.organizo.organizobackend.service;
 
 import com.organizo.organizobackend.dto.ClienteDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 /**
@@ -10,9 +13,9 @@ import java.util.List;
 public interface ClienteService {
 
     /**
-     * Retorna todos os clientes cadastrados.
+     * Retorna página de clientes.
      */
-    List<ClienteDTO> listarTodos();
+    Page<ClienteDTO> listar(Pageable pageable);
 
     /**
      * Busca um cliente pelo ID.

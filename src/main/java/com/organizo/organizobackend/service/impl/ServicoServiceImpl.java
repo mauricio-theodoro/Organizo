@@ -2,9 +2,13 @@ package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.ServicoDTO;
 import com.organizo.organizobackend.model.Servico;
+import com.organizo.organizobackend.mapper.ServicoMapper;
 import com.organizo.organizobackend.repository.ServicoRepository;
 import com.organizo.organizobackend.service.ServicoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,44 +22,34 @@ import java.util.stream.Collectors;
 public class ServicoServiceImpl implements ServicoService {
 
     private final ServicoRepository servicoRepo;
+    private final ServicoMapper mapper;
 
     @Autowired
-    public ServicoServiceImpl(ServicoRepository servicoRepo) {
+    public ServicoServiceImpl(ServicoRepository servicoRepo, ServicoMapper mapper) {
         this.servicoRepo = servicoRepo;
+        this.mapper = mapper;
+    }
+
+    /**
+     * Lista serviços de forma paginada.
+     * Cache "servicos" to reduce load on database.
+     */
+    @Override
+    @Cacheable(value = "servicos", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    public Page<ServicoDTO> listar(Pageable pageable) {
+        return servicoRepo.findAll(pageable)
+                .map(mapper::toDto);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public List<ServicoDTO> listarTodos() {
-        // Busca todas entidades e mapeia para DTO
-        return servicoRepo.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
+    @Cacheable(value = "servicos", key = "#id")
     public ServicoDTO buscarPorId(Long id) {
         Servico servico = servicoRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado: " + id));
-        return toDTO(servico);
+        return mapper.toDto(servico);
     }
 
-    /**
-     * Converte entidade Servico em DTO.
-     */
-    private ServicoDTO toDTO(Servico s) {
-        ServicoDTO dto = new ServicoDTO();
-        dto.setId(s.getId());
-        dto.setNome(s.getNome());
-        dto.setDescricao(s.getDescricao());
-        dto.setDuracaoMinutos(s.getDuracaoMinutos());
-        dto.setPreco(s.getPreco());
-        return dto;
-    }
 }

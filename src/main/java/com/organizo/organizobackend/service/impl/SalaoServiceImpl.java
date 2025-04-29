@@ -8,6 +8,8 @@ import com.organizo.organizobackend.service.SalaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,13 +31,14 @@ public class SalaoServiceImpl implements SalaoService {
         this.mapper = mapper;
     }
 
+    /**
+     * Lista clientes paginados com cache.
+     */
     @Override
-    @Cacheable(value = "saloes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
-    public List<SalaoDTO> listarTodos() {
-        return salaoRepo.findAll()
-                .stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    @Cacheable(value = "clientes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    public Page<SalaoDTO> listar(Pageable pageable) {
+        return salaoRepo.findAll(pageable)
+                .map(mapper::toDto);
     }
 
     @Override

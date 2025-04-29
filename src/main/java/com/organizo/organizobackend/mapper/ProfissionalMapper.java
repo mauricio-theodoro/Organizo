@@ -1,4 +1,11 @@
 package com.organizo.organizobackend.mapper;
 
-public class ProfissionalMapper {
+import com.organizo.organizobackend.dto.ProfissionalDTO;
+import com.organizo.organizobackend.model.Profissional;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface ProfissionalMapper {
+    ProfissionalDTO toDto(Profissional entity);
+    Profissional toEntity(ProfissionalDTO dto);
 }

@@ -1,10 +1,14 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.ProfissionalDTO;
+import com.organizo.organizobackend.mapper.ProfissionalMapper;
 import com.organizo.organizobackend.model.Profissional;
 import com.organizo.organizobackend.repository.ProfissionalRepository;
 import com.organizo.organizobackend.service.ProfissionalService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,46 +21,36 @@ import java.util.stream.Collectors;
 public class ProfissionalServiceImpl implements ProfissionalService {
 
     private final ProfissionalRepository repo;
+    private final ProfissionalMapper mapper;
 
     @Autowired
-    public ProfissionalServiceImpl(ProfissionalRepository repo) {
+    public ProfissionalServiceImpl(ProfissionalRepository repo, ProfissionalMapper mapper) {
         this.repo = repo;
+        this.mapper = mapper;
     }
 
     @Override
-    public List<ProfissionalDTO> listarTodos() {
-        return repo.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    @Cacheable(value = "profissionais", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    public Page<ProfissionalDTO> listar(Pageable pageable) {
+        return repo.findAll(pageable)
+                .map(mapper::toDto);
     }
 
     @Override
-    public List<ProfissionalDTO> listarPorSalao(Long salaoId) {
-        return repo.findBySalaoId(salaoId).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    @Cacheable(value = "profissionais",
+            key = "'salao-'+#salaoId+'-'+#pageable.pageNumber+'-'+#pageable.pageSize+'-'+#pageable.sort.toString()")
+    public Page<ProfissionalDTO> listarPorSalao(Long salaoId, Pageable pageable) {
+        return repo.findBySalaoId(salaoId, pageable)
+                .map(mapper::toDto);
     }
 
+
     @Override
+    @Cacheable(value = "profissionais", key = "#id")
     public ProfissionalDTO buscarPorId(Long id) {
         Profissional p = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado: " + id));
-        return toDTO(p);
+        return mapper.toDto(p);
     }
 
-    /**
-     * Converte entidade Profissional em DTO.
-     */
-    private ProfissionalDTO toDTO(Profissional p) {
-        ProfissionalDTO dto = new ProfissionalDTO();
-        dto.setId(p.getId());
-        dto.setNome(p.getNome());
-        dto.setSobrenome(p.getSobrenome());
-        dto.setEmail(p.getEmail());
-        dto.setTelefone(p.getTelefone());
-        dto.setSalaoId(p.getSalao().getId());
-        dto.setCriadoEm(p.getCriadoEm());
-        dto.setAtualizadoEm(p.getAtualizadoEm());
-        return dto;
-    }
 }

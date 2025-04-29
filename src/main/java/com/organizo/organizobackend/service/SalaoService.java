@@ -1,6 +1,9 @@
 package com.organizo.organizobackend.service;
 
 import com.organizo.organizobackend.dto.SalaoDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 
 /**
@@ -10,10 +13,10 @@ import java.util.List;
 public interface SalaoService {
 
     /**
-     * Retorna todos os salões cadastrados.
-     * @return lista de SalãoDTO
+     * Retorna uma página de serviços cadastrados.
+     * @param pageable parâmetros de paginação e ordenação
      */
-    List<SalaoDTO> listarTodos();
+    Page<SalaoDTO> listar(Pageable pageable);
 
     /**
      * Busca um salão pelo seu ID.
