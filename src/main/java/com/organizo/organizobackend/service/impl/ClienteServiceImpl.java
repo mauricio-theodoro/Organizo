@@ -35,7 +35,6 @@ public class ClienteServiceImpl implements ClienteService {
      * Lista clientes paginados com cache.
      */
     @Override
-    @Cacheable(value = "clientes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<ClienteDTO> listar(Pageable pageable) {
         return repo.findAll(pageable)
                 .map(mapper::toDto);

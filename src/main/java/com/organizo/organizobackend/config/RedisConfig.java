@@ -1,8 +1,5 @@
 package com.organizo.organizobackend.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
@@ -24,64 +21,56 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig extends CachingConfigurerSupport {
 
-
-    // 1) ObjectMapper com suporte a Java 8 date/time
-    @Bean
-    public ObjectMapper jacksonObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        return mapper;
-    }
-
-    // 2) Factory de conexão (host/porta via properties ou variáveis de ambiente)
     @Bean
     public LettuceConnectionFactory redisConnectionFactory(
             @Value("${spring.redis.host:localhost}") String host,
             @Value("${spring.redis.port:6379}") int port) {
+        // Conecta ao Redis no host/porta configurados (padrão: localhost:6379)
         return new LettuceConnectionFactory(host, port);
     }
 
-    // 3) Template que usa o nosso ObjectMapper para JSON
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(
-            LettuceConnectionFactory cf,
-            ObjectMapper mapper) {
+    public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory cf) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(cf);
 
-        // Serializadores de chave (String) e valor (JSON com suporte a LocalDateTime)
-        StringRedisSerializer keySer = new StringRedisSerializer();
-        GenericJackson2JsonRedisSerializer valSer =
-                new GenericJackson2JsonRedisSerializer(mapper);
+        // Serializadores para chave e valor
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
 
-        template.setKeySerializer(keySer);
-        template.setValueSerializer(valSer);
-        template.setHashKeySerializer(keySer);
-        template.setHashValueSerializer(valSer);
-        template.afterPropertiesSet();
+        //  para hash também
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
         return template;
     }
 
-    // 4) CacheManager que também usa JSON configurado
+    /**
+     * Configura o CacheManager do Spring para usar Redis:
+     * - TTL padrão de 10 minutos
+     * - Serialização JSON dos valores
+     */
     @Bean
-    public CacheManager cacheManager(
-            LettuceConnectionFactory cf,
-            ObjectMapper mapper) {
+    @Override
+    public CacheManager cacheManager() {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
+                // tempo de vida das entradas do cache
                 .entryTtl(Duration.ofMinutes(10))
+                // não cachear valores nulos
                 .disableCachingNullValues()
-                .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair
-                                .fromSerializer(new GenericJackson2JsonRedisSerializer(mapper))
-                );
+                // usa JSON para serializar objetos
+                .serializeValuesWith(RedisSerializationContext
+                        .SerializationPair
+                        .fromSerializer(new GenericJackson2JsonRedisSerializer()));
 
-        return RedisCacheManager.builder(cf)
+        return RedisCacheManager.builder(redisConnectionFactory(null, 0))
                 .cacheDefaults(config)
                 .build();
     }
 
-    // 5) Na falha do cache, não quebra a aplicação
+    /**
+     * Em caso de falha no Redis, evitamos que o cache quebre a aplicação:
+     * voltamos a um comportamento "silencioso" de erro de cache.
+     */
     @Bean
     @Override
     public CacheErrorHandler errorHandler() {

@@ -30,7 +30,6 @@ public class ProfissionalServiceImpl implements ProfissionalService {
      * Lista profissionais com paginação.
      */
     @Override
-    @Cacheable(value = "profissionais", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<ProfissionalDTO> listar(Pageable pageable) {
         return repo.findAll(pageable)
                 .map(mapper::toDto);
@@ -40,7 +39,6 @@ public class ProfissionalServiceImpl implements ProfissionalService {
      * Lista profissionais de um salão específico com paginação.
      */
     @Override
-    @Cacheable(value = "profissionais", key = "'salao-'+#salaoId+'-'+#pageable.pageNumber+'-'+#pageable.pageSize+'-'+#pageable.sort")
     public Page<ProfissionalDTO> listarPorSalao(Long salaoId, Pageable pageable) {
         return repo.findBySalaoId(salaoId, pageable)
                 .map(mapper::toDto);

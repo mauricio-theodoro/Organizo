@@ -36,7 +36,6 @@ public class SalaoServiceImpl implements SalaoService {
      * Cache: 'saloes' -> página + tamanho + ordenação.
      */
     @Override
-    @Cacheable(value = "saloes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<SalaoDTO> listar(Pageable pageable) {
         return salaoRepo.findAll(pageable)
                 .map(mapper::toDto);

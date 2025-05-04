@@ -35,7 +35,6 @@ public class ServicoServiceImpl implements ServicoService {
      * Cache "servicos" to reduce load on database.
      */
     @Override
-    @Cacheable(value = "servicos", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<ServicoDTO> listar(Pageable pageable) {
         return servicoRepo.findAll(pageable)
                 .map(mapper::toDto);
