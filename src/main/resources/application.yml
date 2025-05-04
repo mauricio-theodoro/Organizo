@@ -1,23 +1,29 @@
+# src/main/resources/application.yml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/organizo?useUnicode=true&serverTimezone=America/Sao_Paulo
-    username: root
-    password:
+    # se não vier SPRING_DATASOURCE_URL do ambiente, usa o localhost (útil para rodar direto no IntelliJ)
+    url:      ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/organizo?useUnicode=true&serverTimezone=America/Sao_Paulo}
+    # padrão 'organizo' (atualize se você tiver outro usuário)
+    username: ${SPRING_DATASOURCE_USERNAME:organizo}
+    # agora com fallback para 'organizo_pass'
+    password: ${SPRING_DATASOURCE_PASSWORD:organizo_pass}
+
   redis:
-    host: localhost
-    port: 6379
+    host: ${SPRING_REDIS_HOST:localhost}
+    port: ${SPRING_REDIS_PORT:6379}
     cache:
       type: redis
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
 
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 2525
-    username: a4ba6720f4eb7b
-    password: fe5579309a75ca
+    host: ${SPRING_MAIL_HOST:sandbox.smtp.mailtrap.io}
+    port: ${SPRING_MAIL_PORT:2525}
+    username: ${SPRING_MAIL_USERNAME:a4ba6720f4eb7b}
+    password: ${SPRING_MAIL_PASSWORD:fe5579309a75ca}
     default-encoding: UTF-8
     properties:
       mail:
