@@ -13,10 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
- * Endpoints para Profissional.
+ * Endpoints REST para manipular Profissionais com paginação.
  */
 @Tag(name = "Profissionais", description = "Gestão dos profissionais dos salões")
 @RestController
@@ -30,36 +28,52 @@ public class ProfissionalController {
         this.service = service;
     }
 
+    /**
+     * GET /api/profissionais?page=0&size=10
+     * Lista todos os profissionais paginados.
+     */
     @Operation(summary = "Lista profissionais paginados", description = "Somente PROFISSIONAL")
+    @PreAuthorize("hasRole('PROFISSIONAL')")
     @GetMapping("/profissionais")
-    public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listarTodos(
+    public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listar(
             @PageableDefault(size = 10) Pageable pageable) {
 
         Page<ProfissionalDTO> page = service.listar(pageable);
-
         PaginatedResponse<ProfissionalDTO> resp = new PaginatedResponse<>(
-                page.getContent(), page.getNumber(), page.getSize(),
-                page.getTotalElements(), page.getTotalPages());
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
         return ResponseEntity.ok(resp);
     }
 
-    @Operation(summary = "Lista profissionais de um salão paginados",
-            description = "Somente DONO_SALAO e PROFISSIONAL")
+    /**
+     * GET /api/saloes/{salaoId}/profissionais?page=0&size=10
+     * Lista profissionais de um salão específico.
+     */
+    @Operation(summary = "Lista profissionais de um salão", description = "Somente DONO_SALAO e PROFISSIONAL")
     @GetMapping("/saloes/{salaoId}/profissionais")
     public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listarPorSalao(
             @PathVariable Long salaoId,
             @PageableDefault(size = 10) Pageable pageable) {
 
         Page<ProfissionalDTO> page = service.listarPorSalao(salaoId, pageable);
-
         PaginatedResponse<ProfissionalDTO> resp = new PaginatedResponse<>(
-                page.getContent(), page.getNumber(), page.getSize(),
-                page.getTotalElements(), page.getTotalPages());
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
         return ResponseEntity.ok(resp);
     }
 
-    /** GET /api/profissionais/{id} */
-    /** Apenas PROFISSIONAL vê seus agendamentos ou dados */
+    /**
+     * GET /api/profissionais/{id}
+     * Busca detalhes de um profissional.
+     */
     @Operation(summary = "Busca profissional por ID", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
     @GetMapping("/profissionais/{id}")

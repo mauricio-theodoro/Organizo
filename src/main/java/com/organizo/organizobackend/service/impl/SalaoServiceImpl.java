@@ -32,41 +32,42 @@ public class SalaoServiceImpl implements SalaoService {
     }
 
     /**
-     * Lista clientes paginados com cache.
+     * Lista salões de forma paginada.
+     * Cache: 'saloes' -> página + tamanho + ordenação.
      */
     @Override
-    @Cacheable(value = "clientes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    @Cacheable(value = "saloes", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<SalaoDTO> listar(Pageable pageable) {
         return salaoRepo.findAll(pageable)
                 .map(mapper::toDto);
     }
 
+    /**
+     * Busca um salão pelo ID.
+     * Cache: armazena em 'saloes:id'.
+     */
     @Override
+    @Cacheable(value = "saloes", key = "#id")
     public SalaoDTO buscarPorId(Long id) {
         Salao salao = salaoRepo.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Salão não encontrado com ID: " + id)
-                );
-        return toDTO(salao);
+                .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + id));
+        return mapper.toDto(salao);
     }
 
+    /**
+     * Cria novo salão e limpa cache de listagem.
+     */
     @Override
     @CacheEvict(value = "saloes", allEntries = true)
     public SalaoDTO criar(SalaoDTO dto) {
-        // Converte DTO em entidade, agora incluindo CNPJ
-        Salao salao = new Salao();
-        salao.setNome(dto.getNome());
-        salao.setCnpj(dto.getCnpj());
-        salao.setEndereco(dto.getEndereco());
-        salao.setTelefone(dto.getTelefone());
-
-        // Persiste no banco
-        Salao salvo = salaoRepo.save(salao);
-
-        // Converte de volta para DTO
-        return toDTO(salvo);
+        Salao entity = mapper.toEntity(dto);
+        Salao salvo = salaoRepo.save(entity);
+        return mapper.toDto(salvo);
     }
 
+    /**
+     * Deleta um salão e limpa cache.
+     */
     @Override
     @CacheEvict(value = "saloes", allEntries = true)
     public void deletar(Long id) {

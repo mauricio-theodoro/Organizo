@@ -8,35 +8,40 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.data.domain.Pageable;
-
-import java.util.List;
 
 /**
- * Endpoints REST para manipular Salões.
+ * Endpoints REST para manipular Salões com suporte a paginação.
  */
 @Tag(name = "Salões", description = "Gerenciamento de salões de beleza")
 @RestController
 @RequestMapping("/api/saloes")
 public class SalaoController {
 
+    private final SalaoService salaoService;
+
     @Autowired
-    private SalaoService salaoService;
+    public SalaoController(SalaoService salaoService) {
+        this.salaoService = salaoService;
+    }
 
     /**
      * GET /api/saloes?page=0&size=10
+     * Retorna uma página de Salões.
      */
     @Operation(summary = "Lista salões paginados", description = "Público")
     @GetMapping
     public ResponseEntity<PaginatedResponse<SalaoDTO>> listar(
             @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
 
+        // Executa consulta paginada e converte para DTO
         Page<SalaoDTO> page = salaoService.listar(pageable);
 
+        // Constrói resposta padronizada
         PaginatedResponse<SalaoDTO> resp = new PaginatedResponse<>(
                 page.getContent(),
                 page.getNumber(),
@@ -46,21 +51,21 @@ public class SalaoController {
         );
         return ResponseEntity.ok(resp);
     }
+
     /**
-     * Busca um salão por ID.
+     * GET /api/saloes/{id}
      * Qualquer usuário pode acessar detalhes.
      */
     @Operation(summary = "Busca salão por ID", description = "Público")
     @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public ResponseEntity<SalaoDTO> buscar(@PathVariable Long id) {
-        SalaoDTO dto = salaoService.buscarPorId(id);
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(salaoService.buscarPorId(id));
     }
 
     /**
-     * Cria um novo salão.
-     * Apenas usuário com role DONO_SALAO pode criar.
+     * POST /api/saloes
+     * Cria um novo salão (role DONO_SALAO).
      */
     @Operation(summary = "Cria um novo salão", description = "Somente DONO_SALAO")
     @PreAuthorize("hasRole('DONO_SALAO')")
@@ -71,8 +76,8 @@ public class SalaoController {
     }
 
     /**
-     * Deleta um salão existente.
-     * Apenas usuário com role DONO_SALAO pode deletar.
+     * DELETE /api/saloes/{id}
+     * Deleta um salão (role DONO_SALAO).
      */
     @Operation(summary = "Deleta um salão", description = "Somente DONO_SALAO")
     @PreAuthorize("hasRole('DONO_SALAO')")

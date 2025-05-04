@@ -11,11 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
- * Implementação da lógica de negócio para Profissional.
+ * Implementação da lógica de negócio para Profissional com paginação e cache.
  */
 @Service
 public class ProfissionalServiceImpl implements ProfissionalService {
@@ -29,6 +26,9 @@ public class ProfissionalServiceImpl implements ProfissionalService {
         this.mapper = mapper;
     }
 
+    /**
+     * Lista profissionais com paginação.
+     */
     @Override
     @Cacheable(value = "profissionais", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
     public Page<ProfissionalDTO> listar(Pageable pageable) {
@@ -36,15 +36,19 @@ public class ProfissionalServiceImpl implements ProfissionalService {
                 .map(mapper::toDto);
     }
 
+    /**
+     * Lista profissionais de um salão específico com paginação.
+     */
     @Override
-    @Cacheable(value = "profissionais",
-            key = "'salao-'+#salaoId+'-'+#pageable.pageNumber+'-'+#pageable.pageSize+'-'+#pageable.sort.toString()")
+    @Cacheable(value = "profissionais", key = "'salao-'+#salaoId+'-'+#pageable.pageNumber+'-'+#pageable.pageSize+'-'+#pageable.sort")
     public Page<ProfissionalDTO> listarPorSalao(Long salaoId, Pageable pageable) {
         return repo.findBySalaoId(salaoId, pageable)
                 .map(mapper::toDto);
     }
 
-
+    /**
+     * Busca profissional por ID.
+     */
     @Override
     @Cacheable(value = "profissionais", key = "#id")
     public ProfissionalDTO buscarPorId(Long id) {
@@ -52,5 +56,4 @@ public class ProfissionalServiceImpl implements ProfissionalService {
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado: " + id));
         return mapper.toDto(p);
     }
-
 }
