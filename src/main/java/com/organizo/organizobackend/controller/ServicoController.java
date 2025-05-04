@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.controller;
 
+import com.organizo.organizobackend.dto.PaginatedResponse;
 import com.organizo.organizobackend.dto.ServicoDTO;
 import com.organizo.organizobackend.service.ServicoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -7,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,12 +31,26 @@ public class ServicoController {
 
     /**
      * GET /api/servicos
-     * Retorna página de serviços.
+     * Retorna página de Serviços.
      */
-    @Operation(summary = "Lista serviços paginados", description = "Parâmetros: page, size, sort")
+    @Operation(summary = "Lista todos os serviços", description = "Público")
     @GetMapping
-    public ResponseEntity<Page<ServicoDTO>> listar(Pageable pageable) {
-        return ResponseEntity.ok(servicoService.listar(pageable));
+    public ResponseEntity<PaginatedResponse<ServicoDTO>> listar(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+
+        // obtém o Page<ServicoDTO> do serviço
+        Page<ServicoDTO> page = servicoService.listar(pageable);
+
+        // monta nosso DTO paginado
+        PaginatedResponse<ServicoDTO> resp = new PaginatedResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+
+        return ResponseEntity.ok(resp);
     }
 
     /**
