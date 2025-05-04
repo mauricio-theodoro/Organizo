@@ -1,4 +1,3 @@
-// src/main/java/com/organizo/organizobackend/service/impl/AgendamentoServiceImpl.java
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.AgendamentoDTO;
@@ -18,9 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 /**
  * Implementação da lógica de negócio para Agendamento,
  * incluindo paginação e envio de e‑mail.
@@ -34,25 +30,31 @@ public class AgendamentoServiceImpl implements AgendamentoService {
     @Autowired private ServicoRepository servRepo;
     @Autowired private EmailService emailService;
 
+    /**
+     * Retorna página de todos os agendamentos.
+     */
     @Override
     public Page<AgendamentoDTO> listar(Pageable pageable) {
-        // -> Usa JPA para paginação e converte cada entidade em DTO
         return agRepo.findAll(pageable)
                 .map(this::toDTO);
     }
 
+    /**
+     * Retorna página de agendamentos filtrados por cliente.
+     */
     @Override
-    public List<AgendamentoDTO> listarPorCliente(Long clienteId) {
-        return agRepo.findByClienteId(clienteId).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<AgendamentoDTO> listarPorCliente(Long clienteId, Pageable pageable) {
+        return agRepo.findByClienteId(clienteId, pageable)
+                .map(this::toDTO);
     }
 
+    /**
+     * Retorna página de agendamentos filtrados por profissional.
+     */
     @Override
-    public List<AgendamentoDTO> listarPorProfissional(Long profissionalId) {
-        return agRepo.findByProfissionalId(profissionalId).stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<AgendamentoDTO> listarPorProfissional(Long profissionalId, Pageable pageable) {
+        return agRepo.findByProfissionalId(profissionalId, pageable)
+                .map(this::toDTO);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class AgendamentoServiceImpl implements AgendamentoService {
 
         Agendamento salvo = agRepo.save(ag);
 
-        // dispara e‑mails de confirmação
+        // Envio de e‑mail ao cliente e profissional
         emailService.sendSimpleMessage(
                 cliente.getEmail(),
                 "Agendamento Criado",
@@ -107,7 +109,7 @@ public class AgendamentoServiceImpl implements AgendamentoService {
     }
 
     /**
-     * Converte entidade em DTO simples.
+     * Converte entidade em DTO para resposta.
      */
     private AgendamentoDTO toDTO(Agendamento ag) {
         AgendamentoDTO dto = new AgendamentoDTO();

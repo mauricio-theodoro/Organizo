@@ -25,35 +25,56 @@ public class AgendamentoController {
 
     @Autowired private AgendamentoService service;
 
-    @Operation(summary = "Lista agendamentos paginados", description = "Somente CLIENTE ou PROFISSIONAL conforme regra")
-    @GetMapping
+    /**
+     * GET /api/agendamentos?page=0&size=10
+     * Lista todos os agendamentos de forma paginada.
+     */
+    @Operation(summary = "Lista agendamentos paginados", description = "Somente CLIENTE ou PROFISSIONAL")
+    @GetMapping("/agendamentos")
     public ResponseEntity<PaginatedResponse<AgendamentoDTO>> listar(
             @PageableDefault(size = 10) Pageable pageable) {
 
         Page<AgendamentoDTO> page = service.listar(pageable);
-
         PaginatedResponse<AgendamentoDTO> resp = new PaginatedResponse<>(
                 page.getContent(), page.getNumber(), page.getSize(),
                 page.getTotalElements(), page.getTotalPages());
         return ResponseEntity.ok(resp);
     }
 
-    /** GET /api/clientes/{id}/agendamentos */
-    /** Cliente lista seus agendamentos */
+    /**
+     * GET /api/clientes/{id}/agendamentos
+     * Lista agendamentos de um cliente (paginação).
+     */
     @Operation(summary = "Lista agendamentos de um cliente", description = "Somente CLIENTE")
     @PreAuthorize("hasRole('CLIENTE')")
     @GetMapping("/clientes/{id}/agendamentos")
-    public ResponseEntity<List<AgendamentoDTO>> listarPorCliente(@PathVariable Long id) {
-        return ResponseEntity.ok(service.listarPorCliente(id));
+    public ResponseEntity<PaginatedResponse<AgendamentoDTO>> listarPorCliente(
+            @PathVariable Long id,
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<AgendamentoDTO> page = service.listarPorCliente(id, pageable);
+        PaginatedResponse<AgendamentoDTO> resp = new PaginatedResponse<>(
+                page.getContent(), page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages());
+        return ResponseEntity.ok(resp);
     }
 
-    /** GET /api/profissionais/{id}/agendamentos */
-    /** Profissional lista agendamentos */
+    /**
+     * GET /api/profissionais/{id}/agendamentos
+     * Lista agendamentos de um profissional (paginação).
+     */
     @Operation(summary = "Lista agendamentos de um profissional", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
     @GetMapping("/profissionais/{id}/agendamentos")
-    public ResponseEntity<List<AgendamentoDTO>> listarPorProfissional(@PathVariable Long id) {
-        return ResponseEntity.ok(service.listarPorProfissional(id));
+    public ResponseEntity<PaginatedResponse<AgendamentoDTO>> listarPorProfissional(
+            @PathVariable Long id,
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<AgendamentoDTO> page = service.listarPorProfissional(id, pageable);
+        PaginatedResponse<AgendamentoDTO> resp = new PaginatedResponse<>(
+                page.getContent(), page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages());
+        return ResponseEntity.ok(resp);
     }
 
 

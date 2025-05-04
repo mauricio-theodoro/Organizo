@@ -1,33 +1,36 @@
-// src/main/java/com/organizo/organizobackend/service/AgendamentoService.java
 package com.organizo.organizobackend.service;
 
 import com.organizo.organizobackend.dto.AgendamentoDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 /**
- * Contrato de negócio para Agendamento.
+ * Contrato de negócio para Agendamento, agora suportando paginação.
  */
 public interface AgendamentoService {
 
     /**
-     * Lista agendamentos de forma paginada.
+     * Lista todos os agendamentos de forma paginada.
      * @param pageable parâmetros de página, tamanho e ordenação
      * @return página de AgendamentoDTO
      */
     Page<AgendamentoDTO> listar(Pageable pageable);
 
     /**
-     * Lista todos os agendamentos de um cliente.
+     * Lista agendamentos de um cliente de forma paginada.
+     * @param clienteId identificador do cliente
+     * @param pageable parâmetros de página
+     * @return página de AgendamentoDTO do cliente
      */
-    List<AgendamentoDTO> listarPorCliente(Long clienteId);
+    Page<AgendamentoDTO> listarPorCliente(Long clienteId, Pageable pageable);
 
     /**
-     * Lista todos os agendamentos de um profissional.
+     * Lista agendamentos de um profissional de forma paginada.
+     * @param profissionalId identificador do profissional
+     * @param pageable parâmetros de página
+     * @return página de AgendamentoDTO do profissional
      */
-    List<AgendamentoDTO> listarPorProfissional(Long profissionalId);
+    Page<AgendamentoDTO> listarPorProfissional(Long profissionalId, Pageable pageable);
 
     /**
      * Cria um novo agendamento.

@@ -1,6 +1,8 @@
 package com.organizo.organizobackend.repository;
 
 import com.organizo.organizobackend.model.Agendamento;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,6 +10,19 @@ import java.util.List;
 
 @Repository
 public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> {
-    List<Agendamento> findByClienteId(Long clienteId);
-    List<Agendamento> findByProfissionalId(Long profissionalId);
+
+    /**
+     * Paginação geral de agendamentos.
+     */
+    Page<Agendamento> findAll(Pageable pageable);
+
+    /**
+     * Paginação de agendamentos por cliente.
+     */
+    Page<Agendamento> findByClienteId(Long clienteId, Pageable pageable);
+
+    /**
+     * Paginação de agendamentos por profissional.
+     */
+    Page<Agendamento> findByProfissionalId(Long profissionalId, Pageable pageable);
 }
