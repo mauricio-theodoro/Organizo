@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.dto;
 
+import com.organizo.organizobackend.enums.CargoProfissional;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * DTO para Profissional.
@@ -40,6 +42,12 @@ public class ProfissionalDTO {
     @Schema(description = "ID do salão onde trabalha", required = true, example = "1")
     @NotNull(message = "salaoId é obrigatório")
     private Long salaoId;
+
+    @NotNull
+    private CargoProfissional cargo;
+
+    @NotNull
+    private Set<Long> servicoIds;
 
     @Schema(description = "Data de criação do registro")
     private LocalDateTime criadoEm;
@@ -91,6 +99,21 @@ public class ProfissionalDTO {
         this.salaoId = salaoId;
     }
 
+    public CargoProfissional getCargo() {
+        return cargo;
+    }
+    public void setCargo(CargoProfissional cargo) {
+        this.cargo = cargo;
+    }
+
+    public Set<Long> getServicoIds() {
+        return servicoIds;
+    }
+
+    public void setServicoIds(Set<Long> servicoIds) {
+        this.servicoIds = servicoIds;
+    }
+
     public LocalDateTime getCriadoEm() {
         return criadoEm;
     }
@@ -106,4 +129,7 @@ public class ProfissionalDTO {
     public void setAtualizadoEm(LocalDateTime atualizadoEm) {
         this.atualizadoEm = atualizadoEm;
     }
+
+
+
 }

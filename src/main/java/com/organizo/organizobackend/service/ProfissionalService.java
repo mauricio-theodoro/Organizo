@@ -27,4 +27,8 @@ public interface ProfissionalService {
      * @param id ID do profissional
      */
     ProfissionalDTO buscarPorId(Long id);
+
+    // Novo método para criar profissional atrelado a salão
+    ProfissionalDTO criar(Long salaoId, ProfissionalDTO dto);
+
 }

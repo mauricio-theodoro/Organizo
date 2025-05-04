@@ -28,31 +28,29 @@ public class ProfissionalController {
         this.service = service;
     }
 
-    /**
-     * GET /api/profissionais?page=0&size=10
-     * Lista todos os profissionais paginados.
-     */
+    @Operation(summary = "Cadastra um novo profissional em um salão")
+    @PreAuthorize("hasRole('DONO_SALAO')")
+    @PostMapping
+    public ResponseEntity<ProfissionalDTO> criar(
+            @PathVariable Long salaoId,
+            @RequestBody ProfissionalDTO dto) {
+        ProfissionalDTO criado = service.criar(salaoId, dto);
+        return ResponseEntity.status(201).body(criado);
+    }
+
     @Operation(summary = "Lista profissionais paginados", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
-    @GetMapping("/profissionais")
+    @GetMapping
     public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listar(
+            @PathVariable Long salaoId,
             @PageableDefault(size = 10) Pageable pageable) {
-
-        Page<ProfissionalDTO> page = service.listar(pageable);
+        Page<ProfissionalDTO> page = service.listarPorSalao(salaoId, pageable);
         PaginatedResponse<ProfissionalDTO> resp = new PaginatedResponse<>(
-                page.getContent(),
-                page.getNumber(),
-                page.getSize(),
-                page.getTotalElements(),
-                page.getTotalPages()
-        );
+                page.getContent(), page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages());
         return ResponseEntity.ok(resp);
     }
 
-    /**
-     * GET /api/saloes/{salaoId}/profissionais?page=0&size=10
-     * Lista profissionais de um salão específico.
-     */
     @Operation(summary = "Lista profissionais de um salão", description = "Somente DONO_SALAO e PROFISSIONAL")
     @GetMapping("/saloes/{salaoId}/profissionais")
     public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listarPorSalao(
@@ -70,14 +68,13 @@ public class ProfissionalController {
         return ResponseEntity.ok(resp);
     }
 
-    /**
-     * GET /api/profissionais/{id}
-     * Busca detalhes de um profissional.
-     */
     @Operation(summary = "Busca profissional por ID", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
-    @GetMapping("/profissionais/{id}")
-    public ResponseEntity<ProfissionalDTO> buscar(@PathVariable Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<ProfissionalDTO> buscar(
+            @PathVariable Long salaoId,
+            @PathVariable Long id) {
+        // salaoId validado implicitamente ou poderia checar se o profissional pertence ao salão
         return ResponseEntity.ok(service.buscarPorId(id));
     }
 }

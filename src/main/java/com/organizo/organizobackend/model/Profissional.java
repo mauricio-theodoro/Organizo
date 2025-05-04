@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.model;
 
+import com.organizo.organizobackend.enums.CargoProfissional;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -31,6 +32,11 @@ public class Profissional {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "salao_id", nullable = false)
     private Salao salao;
+
+    // víncula cargos e serviços oferecidos
+    @Enumerated(EnumType.STRING)
+    @Column(nullable=false, length=20)
+    private CargoProfissional cargo;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -103,6 +109,14 @@ public class Profissional {
 
     public LocalDateTime getAtualizadoEm() {
         return atualizadoEm;
+    }
+
+    public CargoProfissional getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(CargoProfissional cargo) {
+        this.cargo = cargo;
     }
 
     // ===================== HOOKS DE PERSISTÊNCIA =====================
