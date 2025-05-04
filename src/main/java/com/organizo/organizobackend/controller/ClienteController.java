@@ -1,6 +1,7 @@
 package com.organizo.organizobackend.controller;
 
 import com.organizo.organizobackend.dto.ClienteDTO;
+import com.organizo.organizobackend.dto.PaginatedResponse;
 import com.organizo.organizobackend.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,14 +31,27 @@ public class ClienteController {
         this.service = service;
     }
 
-    /** GET /api/clientes */
-    @Operation(summary = "Lista clientes", description = "Somente CLIENTE")
-    @PreAuthorize("hasRole('CLIENTE')")
+    /**
+     * GET /api/clientes?page=0&size=10
+     * Retorna página de clientes (somente CLIENTE via @PreAuthorize)
+     */
+    @Operation(summary = "Lista clientes paginados", description = "Somente CLIENTE")
     @GetMapping
-    public ResponseEntity<Page<ClienteDTO>> listar(@PageableDefault(size = 10, sort = "nome") Pageable pageable) {
-        return ResponseEntity.ok(service.listar(pageable));
-    }
+    public ResponseEntity<PaginatedResponse<ClienteDTO>> listar(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
 
+        Page<ClienteDTO> page = service.listar(pageable);
+
+        // Monta resposta paginada genérica
+        PaginatedResponse<ClienteDTO> resp = new PaginatedResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+        return ResponseEntity.ok(resp);
+    }
     /** GET /api/clientes/{id} */
     /** Somente CLIENTE pode ver seu próprio cadastro */
     @Operation(summary = "Busca cliente por ID", description = "Somente CLIENTE")

@@ -1,3 +1,4 @@
+// src/main/java/com/organizo/organizobackend/service/impl/AgendamentoServiceImpl.java
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.AgendamentoDTO;
@@ -13,6 +14,8 @@ import com.organizo.organizobackend.repository.ServicoRepository;
 import com.organizo.organizobackend.service.AgendamentoService;
 import com.organizo.organizobackend.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,27 +23,22 @@ import java.util.stream.Collectors;
 
 /**
  * Implementação da lógica de negócio para Agendamento,
- * mapeando DTO para entidade, salvando e enviando notificações.
+ * incluindo paginação e envio de e‑mail.
  */
 @Service
 public class AgendamentoServiceImpl implements AgendamentoService {
 
-    @Autowired
-    private AgendamentoRepository agRepo;
-    @Autowired
-    private ClienteRepository clienteRepo;
-    @Autowired
-    private ProfissionalRepository profRepo;
-    @Autowired
-    private ServicoRepository servRepo;
-    @Autowired
-    private EmailService emailService;
+    @Autowired private AgendamentoRepository agRepo;
+    @Autowired private ClienteRepository clienteRepo;
+    @Autowired private ProfissionalRepository profRepo;
+    @Autowired private ServicoRepository servRepo;
+    @Autowired private EmailService emailService;
 
     @Override
-    public List<AgendamentoDTO> listarTodos() {
-        return agRepo.findAll().stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
+    public Page<AgendamentoDTO> listar(Pageable pageable) {
+        // -> Usa JPA para paginação e converte cada entidade em DTO
+        return agRepo.findAll(pageable)
+                .map(this::toDTO);
     }
 
     @Override
@@ -59,48 +57,34 @@ public class AgendamentoServiceImpl implements AgendamentoService {
 
     @Override
     public AgendamentoDTO criar(AgendamentoDTO dto) {
-        // Mapeia DTO para entidade
         Cliente cliente = clienteRepo.findById(dto.getClienteId())
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
-        Profissional profissional = profRepo.findById(dto.getProfissionalId())
+        Profissional prof = profRepo.findById(dto.getProfissionalId())
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado"));
-        Servico servico = servRepo.findById(dto.getServicoId())
+        Servico serv = servRepo.findById(dto.getServicoId())
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
 
         Agendamento ag = new Agendamento();
         ag.setCliente(cliente);
-        ag.setProfissional(profissional);
-        ag.setServico(servico);
+        ag.setProfissional(prof);
+        ag.setServico(serv);
         ag.setDataHoraAgendada(dto.getDataHoraAgendada());
         ag.setStatus(StatusAgendamento.PENDENTE);
 
-        // Persiste no banco
         Agendamento salvo = agRepo.save(ag);
 
-        // Envia notificações por e-mail
-        String textoCliente = String.format(
-                "Olá %s,\n\nSeu agendamento para %s às %s foi criado com sucesso!\n\nObrigado.",
-                salvo.getCliente().getNome(),
-                salvo.getServico().getNome(),
-                salvo.getDataHoraAgendada().toString()
+        // dispara e‑mails de confirmação
+        emailService.sendSimpleMessage(
+                cliente.getEmail(),
+                "Agendamento Criado",
+                String.format("Olá %s, seu agendamento para %s às %s foi criado.",
+                        cliente.getNome(), serv.getNome(), ag.getDataHoraAgendada())
         );
         emailService.sendSimpleMessage(
-                salvo.getCliente().getEmail(),
-                "Agendamento Confirmado",
-                textoCliente
-        );
-
-        String textoProf = String.format(
-                "Olá %s,\n\nVocê tem um novo agendamento para %s no dia %s às %s.\n\nVerifique sua agenda.",
-                salvo.getProfissional().getNome(),
-                salvo.getServico().getNome(),
-                salvo.getDataHoraAgendada().toLocalDate(),
-                salvo.getDataHoraAgendada().toLocalTime()
-        );
-        emailService.sendSimpleMessage(
-                salvo.getProfissional().getEmail(),
+                prof.getEmail(),
                 "Novo Agendamento",
-                textoProf
+                String.format("Olá %s, você tem um agendamento para %s em %s.",
+                        prof.getNome(), serv.getNome(), ag.getDataHoraAgendada())
         );
 
         return toDTO(salvo);
@@ -122,7 +106,9 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         return toDTO(agRepo.save(ag));
     }
 
-    /** Converte entidade Agendamento em DTO */
+    /**
+     * Converte entidade em DTO simples.
+     */
     private AgendamentoDTO toDTO(Agendamento ag) {
         AgendamentoDTO dto = new AgendamentoDTO();
         dto.setId(ag.getId());

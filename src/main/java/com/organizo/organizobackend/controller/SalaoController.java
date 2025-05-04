@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.controller;
 
+import com.organizo.organizobackend.dto.PaginatedResponse;
 import com.organizo.organizobackend.dto.SalaoDTO;
 import com.organizo.organizobackend.service.SalaoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,18 +28,24 @@ public class SalaoController {
     private SalaoService salaoService;
 
     /**
-     * Lista todos os salões.
-     * Qualquer usuário pode acessar.
+     * GET /api/saloes?page=0&size=10
      */
-    @Operation(summary = "Lista todos os salões", description = "Público")
-    @PreAuthorize("permitAll()")
+    @Operation(summary = "Lista salões paginados", description = "Público")
     @GetMapping
-    public ResponseEntity<Page<SalaoDTO>> listar(
+    public ResponseEntity<PaginatedResponse<SalaoDTO>> listar(
             @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
-        Page<SalaoDTO> pagina = salaoService.listar(pageable);
-        return ResponseEntity.ok(pagina);
-    }
 
+        Page<SalaoDTO> page = salaoService.listar(pageable);
+
+        PaginatedResponse<SalaoDTO> resp = new PaginatedResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
+        return ResponseEntity.ok(resp);
+    }
     /**
      * Busca um salão por ID.
      * Qualquer usuário pode acessar detalhes.

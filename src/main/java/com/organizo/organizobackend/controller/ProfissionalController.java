@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.controller;
 
+import com.organizo.organizobackend.dto.PaginatedResponse;
 import com.organizo.organizobackend.dto.ProfissionalDTO;
 import com.organizo.organizobackend.service.ProfissionalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,25 +30,32 @@ public class ProfissionalController {
         this.service = service;
     }
 
-    /** GET /api/profissionais */
-    /** Apenas PROFISSIONAL vê lista geral de profissionais */
-    @Operation(summary = "Lista todos os profissionais", description = "Somente PROFISSIONAL")
-    @PreAuthorize("hasRole('PROFISSIONAL')")
+    @Operation(summary = "Lista profissionais paginados", description = "Somente PROFISSIONAL")
     @GetMapping("/profissionais")
-    public ResponseEntity<Page<ProfissionalDTO>> listarTodos(Pageable pageable) {
-        return ResponseEntity.ok(service.listar(pageable));
+    public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listarTodos(
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<ProfissionalDTO> page = service.listar(pageable);
+
+        PaginatedResponse<ProfissionalDTO> resp = new PaginatedResponse<>(
+                page.getContent(), page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages());
+        return ResponseEntity.ok(resp);
     }
 
-    /** GET /api/saloes/{salaoId}/profissionais */
-    /** Apenas DONO_SALAO e PROFISSIONAL podem listar profissionais de um salão */
-    @Operation(summary = "Lista profissionais de um salão",
+    @Operation(summary = "Lista profissionais de um salão paginados",
             description = "Somente DONO_SALAO e PROFISSIONAL")
-    @PreAuthorize("hasAnyRole('DONO_SALAO','PROFISSIONAL')")
     @GetMapping("/saloes/{salaoId}/profissionais")
-    public ResponseEntity<Page<ProfissionalDTO>> listarPorSalao(
+    public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listarPorSalao(
             @PathVariable Long salaoId,
-            @PageableDefault(size = 10, sort = "nome") Pageable pageable) { // Adicione Pageable
-        return ResponseEntity.ok(service.listarPorSalao(salaoId, pageable)); // Passe pageable
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        Page<ProfissionalDTO> page = service.listarPorSalao(salaoId, pageable);
+
+        PaginatedResponse<ProfissionalDTO> resp = new PaginatedResponse<>(
+                page.getContent(), page.getNumber(), page.getSize(),
+                page.getTotalElements(), page.getTotalPages());
+        return ResponseEntity.ok(resp);
     }
 
     /** GET /api/profissionais/{id} */
