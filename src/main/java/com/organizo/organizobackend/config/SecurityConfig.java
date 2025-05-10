@@ -48,9 +48,22 @@ public class SecurityConfig {
 
                         // 4) Demais regras por role…
                         .requestMatchers(HttpMethod.GET,  "/api/clientes/**").hasRole("CLIENTE")
-                        .requestMatchers(HttpMethod.GET,  "/api/profissionais/**").hasRole("PROFISSIONAL")
+                        .requestMatchers(HttpMethod.GET,  "/api/profissionais/**").hasRole("DONO_SALAO")
                         .requestMatchers(HttpMethod.GET,  "/api/saloes/**").hasRole("DONO_SALAO")
                         .requestMatchers(HttpMethod.PUT,  "/api/agendamentos/**").hasRole("CLIENTE")
+
+                        // LISTAGEM DE PROFISSIONAIS: exato e com paginação
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/profissionais",        // cobre GET /api/profissionais
+                                "/api/profissionais/**"      // cobre GET /api/profissionais/{id} e qualquer subpath
+                        ).hasRole("PROFISSIONAL")
+
+                        // libera GET público:
+                        .requestMatchers(HttpMethod.GET, "/api/servicos/**").permitAll()
+                        // cria, atualiza, deleta só para dono do salão
+                        .requestMatchers(HttpMethod.POST,   "/api/servicos").hasRole("DONO_SALAO")
+                        .requestMatchers(HttpMethod.PUT,    "/api/servicos/**").hasRole("DONO_SALAO")
+                        .requestMatchers(HttpMethod.DELETE, "/api/servicos/**").hasRole("DONO_SALAO")
 
                         // 5) Todo o resto precisa estar autenticado
                         .anyRequest().authenticated()

@@ -28,9 +28,9 @@ public class ProfissionalController {
         this.service = service;
     }
 
-    @Operation(summary = "Cadastra um novo profissional em um salão")
+    @Operation(summary = "Cria um novo profissional", description = "Somente DONO_SALAO")
     @PreAuthorize("hasRole('DONO_SALAO')")
-    @PostMapping
+    @PostMapping("/saloes/{salaoId}/profissionais")
     public ResponseEntity<ProfissionalDTO> criar(
             @PathVariable Long salaoId,
             @RequestBody ProfissionalDTO dto) {

@@ -1,5 +1,10 @@
 package com.organizo.organizobackend.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurerSupport;
@@ -7,17 +12,16 @@ import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.cache.interceptor.SimpleCacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.*;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.serializer.RedisSerializationContext.SerializationPair;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
-/**
- * Configuração de conexão e template Redis.
- */
+
 @Configuration
 public class RedisConfig extends CachingConfigurerSupport {
 
@@ -25,54 +29,53 @@ public class RedisConfig extends CachingConfigurerSupport {
     public LettuceConnectionFactory redisConnectionFactory(
             @Value("${spring.redis.host:localhost}") String host,
             @Value("${spring.redis.port:6379}") int port) {
-        // Conecta ao Redis no host/porta configurados (padrão: localhost:6379)
         return new LettuceConnectionFactory(host, port);
+    }
+
+    private GenericJackson2JsonRedisSerializer jacksonSerializer() {
+        // Criamos um ObjectMapper *local*, NÃO como bean!
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        // só para o cache: inclui metadados de tipo (PageImpl etc)
+        mapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
+        );
+        return new GenericJackson2JsonRedisSerializer(mapper);
     }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(LettuceConnectionFactory cf) {
-        RedisTemplate<String, Object> template = new RedisTemplate<>();
-        template.setConnectionFactory(cf);
+        RedisTemplate<String, Object> tpl = new RedisTemplate<>();
+        tpl.setConnectionFactory(cf);
+        StringRedisSerializer keySer = new StringRedisSerializer();
+        GenericJackson2JsonRedisSerializer valSer = jacksonSerializer();
 
-        // Serializadores para chave e valor
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-        //  para hash também
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-        return template;
+        tpl.setKeySerializer(keySer);
+        tpl.setHashKeySerializer(keySer);
+        tpl.setValueSerializer(valSer);
+        tpl.setHashValueSerializer(valSer);
+        tpl.afterPropertiesSet();
+        return tpl;
     }
 
-    /**
-     * Configura o CacheManager do Spring para usar Redis:
-     * - TTL padrão de 10 minutos
-     * - Serialização JSON dos valores
-     */
     @Bean
-    @Override
-    public CacheManager cacheManager() {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                // tempo de vida das entradas do cache
-                .entryTtl(Duration.ofMinutes(10))
-                // não cachear valores nulos
-                .disableCachingNullValues()
-                // usa JSON para serializar objetos
-                .serializeValuesWith(RedisSerializationContext
-                        .SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+    public CacheManager cacheManager(LettuceConnectionFactory cf) {
+        GenericJackson2JsonRedisSerializer ser = jacksonSerializer();
 
-        return RedisCacheManager.builder(redisConnectionFactory(null, 0))
-                .cacheDefaults(config)
+        RedisCacheConfiguration cfg = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10))
+                .disableCachingNullValues()
+                .serializeValuesWith(SerializationPair.fromSerializer(ser));
+
+        return RedisCacheManager.builder(cf)
+                .cacheDefaults(cfg)
                 .build();
     }
 
-    /**
-     * Em caso de falha no Redis, evitamos que o cache quebre a aplicação:
-     * voltamos a um comportamento "silencioso" de erro de cache.
-     */
-    @Bean
-    @Override
+    @Bean @Override
     public CacheErrorHandler errorHandler() {
         return new SimpleCacheErrorHandler();
     }

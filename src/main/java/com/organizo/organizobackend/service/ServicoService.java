@@ -24,4 +24,8 @@ public interface ServicoService {
      * @return DTO do serviço encontrado
      */
     ServicoDTO buscarPorId(Long id);
+
+    ServicoDTO criar(ServicoDTO dto);
+    void deletar(Long id);
+    ServicoDTO atualizar(Long id, ServicoDTO dto);
 }

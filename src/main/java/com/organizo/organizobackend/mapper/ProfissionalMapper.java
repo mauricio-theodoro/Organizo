@@ -5,7 +5,10 @@ import com.organizo.organizobackend.model.Profissional;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        imports = { java.util.stream.Collectors.class }
+)
 public interface ProfissionalMapper {
 
     @Mapping(target = "salaoId", source = "salao.id")

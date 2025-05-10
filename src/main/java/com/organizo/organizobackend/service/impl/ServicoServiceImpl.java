@@ -51,4 +51,28 @@ public class ServicoServiceImpl implements ServicoService {
         return mapper.toDto(servico);
     }
 
+    @Override
+    public ServicoDTO criar(ServicoDTO dto) {
+        Servico entidade = mapper.toEntity(dto);
+        Servico salvo = servicoRepo.save(entidade);
+        return mapper.toDto(salvo);
+    }
+
+    @Override
+    public void deletar(Long id) {
+        servicoRepo.deleteById(id);
+    }
+
+    @Override
+    public ServicoDTO atualizar(Long id, ServicoDTO dto) {
+        Servico existente = servicoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Serviço não encontrado"));
+        existente.setNome(dto.getNome());
+        existente.setDescricao(dto.getDescricao());
+        existente.setDuracaoMinutos(dto.getDuracaoMinutos());
+        existente.setPreco(dto.getPreco());
+        Servico salvado = servicoRepo.save(existente);
+        return mapper.toDto(salvado);
+    }
+
 }
