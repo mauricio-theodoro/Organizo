@@ -40,21 +40,25 @@ public class ProfissionalController {
 
     @Operation(summary = "Lista profissionais paginados", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
-    @GetMapping
+    @GetMapping("/profissionais")
     public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listar(
-            @PathVariable Long salaoId,
             @PageableDefault(size = 10) Pageable pageable) {
-        Page<ProfissionalDTO> page = service.listarPorSalao(salaoId, pageable);
+        Page<ProfissionalDTO> page = service.listar(pageable);
         PaginatedResponse<ProfissionalDTO> resp = new PaginatedResponse<>(
-                page.getContent(), page.getNumber(), page.getSize(),
-                page.getTotalElements(), page.getTotalPages());
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages()
+        );
         return ResponseEntity.ok(resp);
     }
 
     @Operation(summary = "Lista profissionais de um salão", description = "Somente DONO_SALAO e PROFISSIONAL")
+    @PreAuthorize("hasAnyRole('DONO_SALAO','PROFISSIONAL')")
     @GetMapping("/saloes/{salaoId}/profissionais")
     public ResponseEntity<PaginatedResponse<ProfissionalDTO>> listarPorSalao(
-            @PathVariable Long salaoId,
+            @PathVariable("salaoId") Long salaoId,
             @PageableDefault(size = 10) Pageable pageable) {
 
         Page<ProfissionalDTO> page = service.listarPorSalao(salaoId, pageable);
@@ -70,7 +74,7 @@ public class ProfissionalController {
 
     @Operation(summary = "Busca profissional por ID", description = "Somente PROFISSIONAL")
     @PreAuthorize("hasRole('PROFISSIONAL')")
-    @GetMapping("/{id}")
+    @GetMapping("/profissionais/{id}")
     public ResponseEntity<ProfissionalDTO> buscar(
             @PathVariable Long salaoId,
             @PathVariable Long id) {
