@@ -76,7 +76,6 @@ public class ProfissionalController {
     @PreAuthorize("hasRole('PROFISSIONAL')")
     @GetMapping("/profissionais/{id}")
     public ResponseEntity<ProfissionalDTO> buscar(
-            @PathVariable Long salaoId,
             @PathVariable Long id) {
         // salaoId validado implicitamente ou poderia checar se o profissional pertence ao salão
         return ResponseEntity.ok(service.buscarPorId(id));
