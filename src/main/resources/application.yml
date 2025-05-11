@@ -20,11 +20,10 @@ spring:
     show-sql: true
 
   mail:
-    host: ${SPRING_MAIL_HOST:sandbox.smtp.mailtrap.io}
-    port: ${SPRING_MAIL_PORT:2525}
-    username: ${SPRING_MAIL_USERNAME:a4ba6720f4eb7b}
-    password: ${SPRING_MAIL_PASSWORD:fe5579309a75ca}
-    default-encoding: UTF-8
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: a4ba6720f4eb7b
+    password: fe5579309a75ca
     properties:
       mail:
         smtp:
