@@ -1,4 +1,14 @@
 services:
+  frontend:
+    build:
+      context: ./organizo-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      VITE_API_URL: "http://app:8080/api"
+    depends_on:
+      - app
   mysql:
     image: mysql:8.0
     restart: unless-stopped
