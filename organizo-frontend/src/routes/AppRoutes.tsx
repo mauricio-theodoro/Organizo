@@ -1,20 +1,17 @@
-import React, { useContext } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthContext } from '../contexts/AuthContext';
-import Login from '../pages/Login';
-import Home from '../pages/Home';
-import SalonList from '../pages/SalonList';
-import Booking from '../pages/Booking';
+import React, { useContext } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { AuthContext } from '../contexts/AuthContext'
+import Login from '../pages/Login'
+import Home from '../pages/Home'
+import SalonList from '../pages/SalonList'
+import Booking from '../pages/Booking'
 
 export const AppRoutes: React.FC = () => {
-  const { token } = useContext(AuthContext);
+  const { token } = useContext(AuthContext)
 
   return (
     <Routes>
-      {/* Rota pública de login */}
       <Route path="/login" element={<Login />} />
-
-      {/* Rotas protegidas só se token existir */}
       {token ? (
         <>
           <Route path="/" element={<Home />} />
@@ -25,5 +22,5 @@ export const AppRoutes: React.FC = () => {
         <Route path="*" element={<Navigate to="/login" replace />} />
       )}
     </Routes>
-  );
-};
+  )
+}
