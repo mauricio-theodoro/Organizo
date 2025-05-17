@@ -1,5 +1,6 @@
-/* 1. Reset/minimal */
-/* ... aqui você pode incluir um reset simples, ex: box-sizing */
+/* ==========================================================================
+   1. RESET E BOX-SIZING
+   ========================================================================== */
 *,
 *::before,
 *::after {
@@ -8,71 +9,91 @@
   padding: 0;
 }
 
-/* 2. Variáveis CSS */
+/* ==========================================================================
+   2. VARIÁVEIS GLOBAIS
+   ========================================================================== */
 :root {
-  /* Primárias */
-  --color-primary: #0d47a1;   /* Azul escuro */
-  --color-accent:  #ff6f00;   /* Laranja vívido */
-  --color-bg:      #f4f6f8;   /* Fundo neutro claro */
-  --color-surface: #ffffff;   /* Cartões & containers */
+  /* Cores primárias */
+  --color-primary:   #0d47a1; /* Azul escuro */
+  --color-accent:    #ff6f00; /* Laranja vívido */
+  --color-bg:        #f4f6f8; /* Fundo neutro claro */
+  --color-surface:   #ffffff; /* Superfícies (cards, containers) */
 
-  /* Textos */
-  --color-text:    #212121;   /* Texto principal */
-  --color-muted:   #616161;   /* Texto de apoio */
+  /* Texto */
+  --color-text:      #212121; /* Texto principal */
+  --color-muted:     #616161; /* Texto secundário */
 
-  /* Sucesso / Erro */
-  --color-success: #2e7d32;
-  --color-error:   #c62828;
+  /* Estados */
+  --color-success:   #2e7d32;
+  --color-error:     #c62828;
 
   /* Outros */
-  --radius:        0.375rem;
-  --transition:    0.3s ease;
+  --radius:          0.375rem;
+  --transition:      0.3s ease;
 }
 
-/* 3. Base */
+/* ==========================================================================
+   3. ESTILOS DE BASE
+   ========================================================================== */
 body {
   font-family: 'Inter', sans-serif;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
   color: var(--color-text);
   line-height: 1.6;
 }
 
-/* 4. Container */
+/* ==========================================================================
+   4. CONTAINERS
+   ========================================================================== */
+/* Container centralizado com padding */
 .container {
   max-width: 1024px;
   margin: 0 auto;
   padding: 1rem;
 }
 
-/* 5. Buttons */
+/* ==========================================================================
+   5. BOTÕES
+   ========================================================================== */
+/* Botão base */
 .btn {
+  display: inline-block;
   padding: 0.75rem 1.5rem;
+  font-size: 1rem;
   border: none;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: background var(--transition);
-  font-size: 1rem;
+  transition: background-color var(--transition);
+  text-align: center;
 }
+
+/* Variante primária */
 .btn--primary {
-  background: var(--color-primary);
+  background-color: var(--color-primary);
   color: #fff;
 }
 .btn--primary:hover {
-  background: shade(var(--color-primary), 10%);
+  /* escurecer 10%: multiplicar o valor HSL ou ajustar manualmente */
+  background-color: #0b3a8a; /* tom manual mais escuro */
 }
+
+/* Variante secundária (accent) */
 .btn--secondary {
-  background: var(--color-secondary);
+  background-color: var(--color-accent);
   color: #fff;
 }
 .btn--secondary:hover {
-  background: shade(var(--color-secondary), 10%);
+  background-color: #e65c00; /* tom manual mais escuro */
 }
 
-/* 6. Card */
+/* ==========================================================================
+   6. CARD
+   ========================================================================== */
+/* Estrutura básica de card */
 .card {
-  background: #fff;
+  background-color: var(--color-surface);
   border-radius: var(--radius);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   margin-bottom: 1rem;
 }
@@ -85,7 +106,9 @@ body {
   padding: 1rem;
 }
 
-/* 7. LandingPage */
+/* ==========================================================================
+   7. LANDING PAGE
+   ========================================================================== */
 .landing {
   text-align: center;
   padding: 4rem 1rem;
@@ -98,34 +121,23 @@ body {
   font-size: 1.125rem;
   margin-bottom: 2rem;
 }
+/* Espaçamento entre botões */
 .landing__actions > * + * {
   margin-left: 1rem;
 }
 
-/* 8. Responsividade */
-@media (max-width: 600px) {
-  .landing h1 {
-    font-size: 2rem;
-  }
-  .btn {
-    width: 100%;
-    text-align: center;
-  }
-  .landing__actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-}
-
-/* Login & registro */
+/* ==========================================================================
+   8. AUTENTICAÇÃO (LOGIN / REGISTRO)
+   ========================================================================== */
+/* Container do formulário de autenticação */
 .auth-container {
+  width: 100%;
   max-width: 400px;
   margin: 3rem auto;
-  background: var(--color-surface);
+  background-color: var(--color-surface);
   padding: 2rem;
   border-radius: var(--radius);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 .auth-container h1 {
   margin-bottom: 1.5rem;
@@ -134,18 +146,18 @@ body {
 }
 .auth-form label {
   display: block;
-  margin-bottom: 1rem;
   font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 .auth-form input {
   width: 100%;
   padding: 0.75rem;
-  margin-top: 0.25rem;
+  margin-bottom: 1rem;
   border: 1px solid #ccc;
   border-radius: var(--radius);
 }
 .auth-form__error {
-  background: var(--color-error);
+  background-color: var(--color-error);
   color: #fff;
   padding: 0.75rem;
   margin-bottom: 1rem;
@@ -155,26 +167,19 @@ body {
 .auth-form button {
   width: 100%;
 }
-@media (max-width: 480px) {
-  .auth-container {
-    margin: 2rem 1rem;
-  }
-}
 
-/* Dashboard */
-.dashboard h1 {
+/* ==========================================================================
+   9. LISTAGENS E DASHBOARD
+   ========================================================================== */
+.dashboard h1,
+.salons h1 {
   margin-bottom: 1rem;
   color: var(--color-primary);
 }
 .dashboard > .btn {
   margin-bottom: 2rem;
 }
-
-/* Listagem de Salões */
-.salons h1 {
-  margin-bottom: 1rem;
-  color: var(--color-primary);
-}
+/* Cards de salão */
 .salons .card {
   display: flex;
   flex-direction: column;
@@ -184,3 +189,27 @@ body {
   margin-top: 1rem;
 }
 
+/* ==========================================================================
+   10. RESPONSIVIDADE (MOBILE-FIRST)
+   ========================================================================== */
+/* Para telas até 600px */
+@media (max-width: 600px) {
+  /* Ajusta heading do landing */
+  .landing h1 {
+    font-size: 2rem;
+  }
+  /* Botões full-width */
+  .btn {
+    width: 100%;
+  }
+  /* Empilha ações no landing */
+  .landing__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  /* Formulário de autentic. com margens reduzidas */
+  .auth-container {
+    margin: 2rem 1rem;
+  }
+}

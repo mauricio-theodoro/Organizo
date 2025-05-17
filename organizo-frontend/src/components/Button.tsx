@@ -2,24 +2,23 @@ import React from 'react';
 
 export type ButtonVariant = 'primary' | 'secondary';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
 }
 
 /**
- * Botão genérico com duas variações: primary e secondary.
+ * Botão reutilizável com duas variantes de estilo.
  */
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   children,
-  ...rest
-}) => {
-  return (
-    <button
-      className={`btn btn--${variant}`}
-      {...rest}
-    >
-      {children}
-    </button>
-  );
-};
+  className = '',
+  ...props
+}) => (
+  <button
+    className={`btn btn--${variant} ${className}`.trim()}
+    {...props}
+  >
+    {children}
+  </button>
+);

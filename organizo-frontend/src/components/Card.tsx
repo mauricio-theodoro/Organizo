@@ -1,20 +1,15 @@
 import React from 'react';
 
-interface CardProps {
-  title?: string;
+export interface CardProps {
   children: React.ReactNode;
+  className?: string;
 }
 
 /**
- * Card genérico com título opcional e conteúdo.
+ * Card genérico para agrupar conteúdo com sombra e padding.
  */
-export const Card: React.FC<CardProps> = ({ title, children }) => {
-  return (
-    <div className="card">
-      {title && <h2 className="card__title">{title}</h2>}
-      <div className="card__body">
-        {children}
-      </div>
-    </div>
-  );
-};
+export const Card: React.FC<CardProps> = ({ children, className = '' }) => (
+  <div className={`card ${className}`.trim()}>
+    {children}
+  </div>
+);
