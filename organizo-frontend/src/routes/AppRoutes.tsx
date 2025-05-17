@@ -1,3 +1,4 @@
+// src/routes/AppRoutes.tsx
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
