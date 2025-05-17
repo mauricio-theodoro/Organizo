@@ -1,33 +1,37 @@
+// src/pages/SalonList.tsx
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { getSalons } from '../api';
+import { Card } from '../components/Card';
 
-interface Salon { id: number; nome: string; endereco: string; }
-
-const SalonList: React.FC = () => {
-  const [lista, setLista] = useState<Salon[]>([]);
-  const nav = useNavigate();
+/**
+ * Lista os salões disponíveis para agendamento.
+ */
+export default function SalonList() {
+  const [salons, setSalons] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_URL}/saloes`)
-      .then(r => setLista(r.data.content))
-      .catch(console.error);
+    getSalons()
+      .then(setSalons)
+      .finally(() => setLoading(false));
   }, []);
 
-  return (
-    <div>
-      <h1>Salões</h1>
-      <ul>
-        {lista.map(s =>
-          <li key={s.id}>
-            <strong>{s.nome}</strong><br/>
-            {s.endereco}<br/>
-            <button onClick={() => nav(`/book/${s.id}/1`)}>Agendar serviço 1</button>
-          </li>
-        )}
-      </ul>
-    </div>
-  );
-};
+  if (loading) return <p>Carregando salões...</p>;
 
-export default SalonList;
+  return (
+    <main className="container salons">
+      <h1>Salões Próximos</h1>
+      {salons.map(s => (
+        <Card key={s.id} title={s.nome}>
+          <p><strong>Endereço:</strong> {s.endereco}</p>
+          <p><strong>Telefone:</strong> {s.telefone}</p>
+          <Button variant="primary" onClick={() =>
+            window.location.href = `/book/${s.id}/${s.servicos[0]?.id}`
+          }>
+            Ver Serviços
+          </Button>
+        </Card>
+      ))}
+    </main>
+  );
+}

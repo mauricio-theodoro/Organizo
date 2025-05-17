@@ -1,11 +1,12 @@
+// src/api/index.ts
 import axios from 'axios';
 
-export const api = axios.create({
+const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
 });
 
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('organizo_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
+// ✅ Esta função precisa existir!
+export const getSalons = async () => {
+  const { data } = await api.get('/saloes');
+  return data.content; // ou simplesmente: return data;
+};

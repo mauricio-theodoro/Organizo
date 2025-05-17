@@ -1,97 +1,186 @@
-
-/* 1) Reset / normalização simples */
-* {
+/* 1. Reset/minimal */
+/* ... aqui você pode incluir um reset simples, ex: box-sizing */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
-/* 2) Tipografia e cores base */
+/* 2. Variáveis CSS */
 :root {
-  --color-primary: #4f46e5;       /* Indigo-600 */
-  --color-primary-dark: #4338ca;  /* Indigo-700 */
-  --color-secondary: #6b7280;     /* Gray-500 */
-  --color-light: #f3f4f6;         /* Gray-100 */
-  --color-dark: #111827;          /* Gray-900 */
-  --font-family: 'Inter', sans-serif;
-  --spacing-base: 1rem;
+  /* Primárias */
+  --color-primary: #0d47a1;   /* Azul escuro */
+  --color-accent:  #ff6f00;   /* Laranja vívido */
+  --color-bg:      #f4f6f8;   /* Fundo neutro claro */
+  --color-surface: #ffffff;   /* Cartões & containers */
+
+  /* Textos */
+  --color-text:    #212121;   /* Texto principal */
+  --color-muted:   #616161;   /* Texto de apoio */
+
+  /* Sucesso / Erro */
+  --color-success: #2e7d32;
+  --color-error:   #c62828;
+
+  /* Outros */
+  --radius:        0.375rem;
+  --transition:    0.3s ease;
 }
 
+/* 3. Base */
 body {
-  font-family: var(--font-family);
-  color: var(--color-dark);
-  background-color: var(--color-light);
-  line-height: 1.5;
+  font-family: 'Inter', sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
 }
 
-/* 3) Container centralizado */
+/* 4. Container */
 .container {
-  width: min(90%, 800px);
+  max-width: 1024px;
   margin: 0 auto;
-  padding: var(--spacing-base);
+  padding: 1rem;
 }
 
-/* 4) Landing styles */
+/* 5. Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition);
+  font-size: 1rem;
+}
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn--primary:hover {
+  background: shade(var(--color-primary), 10%);
+}
+.btn--secondary {
+  background: var(--color-secondary);
+  color: #fff;
+}
+.btn--secondary:hover {
+  background: shade(var(--color-secondary), 10%);
+}
+
+/* 6. Card */
+.card {
+  background: #fff;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+.card__title {
+  padding: 1rem;
+  font-size: 1.25rem;
+  border-bottom: 1px solid #eee;
+}
+.card__body {
+  padding: 1rem;
+}
+
+/* 7. LandingPage */
 .landing {
   text-align: center;
-  margin-top: 5rem;
+  padding: 4rem 1rem;
 }
-
 .landing h1 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
-  color: var(--color-primary-dark);
 }
-
 .landing p {
   font-size: 1.125rem;
   margin-bottom: 2rem;
 }
-
-.landing__actions {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+.landing__actions > * + * {
+  margin-left: 1rem;
 }
 
-/* 5) Botões */
-.btn {
-  font-size: 1rem;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.btn--primary {
-  background-color: var(--color-primary);
-  color: white;
-}
-
-.btn--primary:hover {
-  background-color: var(--color-primary-dark);
-}
-
-.btn--secondary {
-  background-color: white;
-  color: var(--color-secondary);
-  border: 2px solid var(--color-secondary);
-}
-
-.btn--secondary:hover {
-  background-color: var(--color-secondary);
-  color: white;
-}
-
-/* 6) Responsividade */
-@media (max-width: 480px) {
+/* 8. Responsividade */
+@media (max-width: 600px) {
   .landing h1 {
     font-size: 2rem;
   }
   .btn {
     width: 100%;
-    padding: 0.75rem;
+    text-align: center;
+  }
+  .landing__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 }
+
+/* Login & registro */
+.auth-container {
+  max-width: 400px;
+  margin: 3rem auto;
+  background: var(--color-surface);
+  padding: 2rem;
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+.auth-container h1 {
+  margin-bottom: 1.5rem;
+  color: var(--color-primary);
+  text-align: center;
+}
+.auth-form label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+.auth-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: var(--radius);
+}
+.auth-form__error {
+  background: var(--color-error);
+  color: #fff;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius);
+  text-align: center;
+}
+.auth-form button {
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .auth-container {
+    margin: 2rem 1rem;
+  }
+}
+
+/* Dashboard */
+.dashboard h1 {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+.dashboard > .btn {
+  margin-bottom: 2rem;
+}
+
+/* Listagem de Salões */
+.salons h1 {
+  margin-bottom: 1rem;
+  color: var(--color-primary);
+}
+.salons .card {
+  display: flex;
+  flex-direction: column;
+}
+.salons .card button {
+  align-self: flex-start;
+  margin-top: 1rem;
+}
+
