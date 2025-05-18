@@ -3,78 +3,87 @@ import React, {
   useState,
   useEffect,
   ReactNode
-} from 'react'
-import axios from 'axios'
-import { useNavigate } from 'react-router-dom'
+} from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthContextData {
-  token: string | null
-  loading: boolean
-  login: (email: string, senha: string) => Promise<void>
-  logout: () => void
+  token: string | null;
+  role: 'CLIENTE' | 'PROFISSIONAL' | 'DONO_SALAO' | null;
+  loading: boolean;
+  login: (email: string, senha: string) => Promise<void>;
+  logout: () => void;
 }
 
 export const AuthContext = createContext<AuthContextData>({
   token: null,
+  role: null,
   loading: false,
   login: async () => {},
   logout: () => {}
-})
+});
 
-interface Props { children: ReactNode }
+interface Props { children: ReactNode; }
 
 export const AuthProvider: React.FC<Props> = ({ children }) => {
-  const navigate = useNavigate()
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'))
-  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate();
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem('token')
+  );
+  const [role, setRole] = useState<AuthContextData['role']>(
+    () => (localStorage.getItem('role') as AuthContextData['role']) || null
+  );
+  const [loading, setLoading] = useState(true);
 
-  // Quando o token mudar, configuramos axios e persistimos
   useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      localStorage.setItem('token', token)
+    if (token && role) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', role);
     } else {
-      delete axios.defaults.headers.common['Authorization']
-      localStorage.removeItem('token')
+      delete axios.defaults.headers.common['Authorization'];
+      localStorage.removeItem('token');
+      localStorage.removeItem('role');
     }
-    setLoading(false)
-  }, [token])
+    setLoading(false);
+  }, [token, role]);
 
   const login = async (email: string, senha: string) => {
     setLoading(true);
     try {
-      const resp = await axios.post<{ token: string; role: string }>(
+      const resp = await axios.post<{
+        token: string;
+        role: AuthContextData['role'];
+      }>(
         `${import.meta.env.VITE_API_URL}/auth/login`,
-        { email, senha }
+        { email, senha },
+        { headers: { 'Content-Type': 'application/json' } }
       );
-      const { token, role } = resp.data;
-      setToken(token);
+      setToken(resp.data.token);
+      setRole(resp.data.role);
 
-      //  ↙︎ INSIRA AQUI A LÓGICA DE REDIRECIONAMENTO POR ROLE:
-      if (role === 'CLIENTE') {
-        navigate('/cliente/dashboard', { replace: true });
-      } else if (role === 'PROFISSIONAL') {
-        navigate('/profissional/dashboard', { replace: true });
-      } else if (role === 'DONO_SALAO') {
-        navigate('/owner/dashboard', { replace: true });
+      // redireciona de acordo com a role
+      if (resp.data.role === 'CLIENTE') {
+        navigate('/dashboard/cliente', { replace: true });
+      } else if (resp.data.role === 'PROFISSIONAL') {
+        navigate('/dashboard/profissional', { replace: true });
       } else {
-        // fallback genérico
-        navigate('/', { replace: true });
+        navigate('/dashboard/owner', { replace: true });
       }
-
     } finally {
       setLoading(false);
     }
   };
 
   const logout = () => {
-    setToken(null)
-    navigate('/login', { replace: true })
-  }
+    setToken(null);
+    setRole(null);
+    navigate('/login', { replace: true });
+  };
 
   return (
-    <AuthContext.Provider value={{ token, loading, login, logout }}>
+    <AuthContext.Provider value={{ token, role, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
