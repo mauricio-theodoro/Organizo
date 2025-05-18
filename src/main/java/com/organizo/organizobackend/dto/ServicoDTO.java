@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 /**
  * DTO para transferência de dados de Servico
@@ -35,6 +36,14 @@ public class ServicoDTO {
     @NotNull(message = "preco é obrigatório")
     @DecimalMin(value = "0.0", inclusive = false, message = "preco deve ser positivo")
     private BigDecimal preco;
+
+    /** <-- novo campo: o salão ao qual este serviço pertence */
+    @Schema(description="ID do salão ao qual o serviço pertence")
+    private Long salaoId;
+
+    /** <-- novo campo: IDs dos profissionais que executam este serviço */
+    @Schema(description="IDs dos profissionais habilitados para este serviço")
+    private Set<Long> profissionalIds;
 
     // Getters e Setters
     public Long getId() {
@@ -74,5 +83,19 @@ public class ServicoDTO {
 
     public void setPreco(BigDecimal preco) {
         this.preco = preco;
+    }
+
+    public Long getSalaoId() {
+        return salaoId;
+    }
+    public void setSalaoId(Long salaoId) {
+        this.salaoId = salaoId;
+    }
+
+    public Set<Long> getProfissionalIds() {
+        return profissionalIds;
+    }
+    public void setProfissionalIds(Set<Long> profissionalIds) {
+        this.profissionalIds = profissionalIds;
     }
 }

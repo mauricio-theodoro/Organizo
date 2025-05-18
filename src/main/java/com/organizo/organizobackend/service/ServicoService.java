@@ -28,4 +28,6 @@ public interface ServicoService {
     ServicoDTO criar(ServicoDTO dto);
     void deletar(Long id);
     ServicoDTO atualizar(Long id, ServicoDTO dto);
+    ServicoDTO criar(Long salaoId, ServicoDTO dto);
+
 }

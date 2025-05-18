@@ -1,8 +1,12 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.ServicoDTO;
+import com.organizo.organizobackend.model.Profissional;
+import com.organizo.organizobackend.model.Salao;
 import com.organizo.organizobackend.model.Servico;
 import com.organizo.organizobackend.mapper.ServicoMapper;
+import com.organizo.organizobackend.repository.ProfissionalRepository;
+import com.organizo.organizobackend.repository.SalaoRepository;
 import com.organizo.organizobackend.repository.ServicoRepository;
 import com.organizo.organizobackend.service.ServicoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -23,11 +28,15 @@ public class ServicoServiceImpl implements ServicoService {
 
     private final ServicoRepository servicoRepo;
     private final ServicoMapper mapper;
+    private final SalaoRepository salaoRepo;
+    private final ProfissionalRepository profRepo;
 
     @Autowired
-    public ServicoServiceImpl(ServicoRepository servicoRepo, ServicoMapper mapper) {
+    public ServicoServiceImpl(ServicoRepository servicoRepo, ServicoMapper mapper, SalaoRepository salaoRepo, ProfissionalRepository profRepo) {
         this.servicoRepo = servicoRepo;
         this.mapper = mapper;
+        this.salaoRepo = salaoRepo;
+        this.profRepo = profRepo;
     }
 
     /**
@@ -52,10 +61,25 @@ public class ServicoServiceImpl implements ServicoService {
     }
 
     @Override
-    public ServicoDTO criar(ServicoDTO dto) {
-        Servico entidade = mapper.toEntity(dto);
-        Servico salvo = servicoRepo.save(entidade);
-        return mapper.toDto(salvo);
+    public ServicoDTO criar(Long salaoId, ServicoDTO dto) {
+        // 1) busca o salão
+        Salao salao = salaoRepo.findById(salaoId)
+                .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + salaoId));
+
+        // 2) mapeia e vincula
+        Servico serv = mapper.toEntity(dto);
+        serv.setSalao(salao);
+
+        // 3) associa profissionais
+        Set<Profissional> pros = dto.getProfissionalIds().stream()
+                .map(id -> profRepo.findById(id)
+                        .orElseThrow(() -> new RuntimeException("Profissional não encontrado: " + id)))
+                .collect(Collectors.toSet());
+        serv.setProfissionais(pros);
+
+        // 4) salva e retorna DTO
+        Servico saved = servicoRepo.save(serv);
+        return mapper.toDto(saved);
     }
 
     @Override
