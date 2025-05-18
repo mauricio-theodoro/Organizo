@@ -1,38 +1,67 @@
-import React, { createContext, useState, useEffect } from 'react'
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  ReactNode
+} from 'react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
-export interface AuthContextType {
+interface AuthContextData {
   token: string | null
-  login: (token: string) => void
+  loading: boolean
+  login: (email: string, senha: string) => Promise<void>
   logout: () => void
 }
 
-export const AuthContext = createContext<AuthContextType>({
+export const AuthContext = createContext<AuthContextData>({
   token: null,
-  login: () => {},
-  logout: () => {},
+  loading: false,
+  login: async () => {},
+  logout: () => {}
 })
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null)
+interface Props { children: ReactNode }
 
-  // Ao montar, busca token no localStorage (se existir)
+export const AuthProvider: React.FC<Props> = ({ children }) => {
+  const navigate = useNavigate()
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'))
+  const [loading, setLoading] = useState(true)
+
+  // Quando o token mudar, configuramos axios e persistimos
   useEffect(() => {
-    const saved = localStorage.getItem('organizo_token')
-    if (saved) setToken(saved)
-  }, [])
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      localStorage.setItem('token', token)
+    } else {
+      delete axios.defaults.headers.common['Authorization']
+      localStorage.removeItem('token')
+    }
+    setLoading(false)
+  }, [token])
 
-  const login = (newToken: string) => {
-    localStorage.setItem('organizo_token', newToken)
-    setToken(newToken)
+  const login = async (email: string, senha: string) => {
+    setLoading(true)
+    try {
+      const resp = await axios.post<{ token: string }>(
+        `${import.meta.env.VITE_API_URL}/auth/login`,
+        { email, senha },
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+      setToken(resp.data.token)
+      navigate('/home', { replace: true })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const logout = () => {
-    localStorage.removeItem('organizo_token')
     setToken(null)
+    navigate('/login', { replace: true })
   }
 
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ token, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
