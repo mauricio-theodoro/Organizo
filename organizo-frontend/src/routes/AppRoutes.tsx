@@ -17,23 +17,33 @@ export default function AppRoutes() {
     return <p>Carregando...</p>
   }
 
-  return (
-    <Routes>
-      {/* Rotas públicas */}
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
+   return (
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
 
-      {/* Rotas privadas */}
-      {token ? (
-        <Route element={<Layout />}>
-          <Route path="/home" element={<Home />} />
-          <Route path="/salons" element={<SalonList />} />
-          <Route path="/book/:salonId/:serviceId" element={<Booking />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
-        </Route>
-      ) : (
-        <Route path="*" element={<Navigate to="/" replace />} />
-      )}
-    </Routes>
-  )
-}
+        {token ? (
+          <>
+            <Route path="/cliente/dashboard" element={<ClienteDashboard />} />
+            <Route path="/profissional/dashboard" element={<ProfissionalDashboard />} />
+            <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+            {/* redirecione rotas desconhecidas após login */}
+            <Route path="*" element={<Navigate to={`/${determineBasePath()}`} replace />} />
+          </>
+        ) : (
+          <Route path="*" element={<Navigate to="/" replace />} />
+        )}
+      </Routes>
+    );
+  }
+
+  /**
+   * Opcional: função para decidir o base path de cada role
+   */
+  function determineBasePath(): string {
+    const role = localStorage.getItem('role');
+    if (role === 'CLIENTE')   return 'cliente/dashboard';
+    if (role === 'PROFISSIONAL') return 'profissional/dashboard';
+    if (role === 'DONO_SALAO') return 'owner/dashboard';
+    return '';
+  }

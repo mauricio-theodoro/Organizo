@@ -41,19 +41,31 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   }, [token])
 
   const login = async (email: string, senha: string) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const resp = await axios.post<{ token: string }>(
+      const resp = await axios.post<{ token: string; role: string }>(
         `${import.meta.env.VITE_API_URL}/auth/login`,
-        { email, senha },
-        { headers: { 'Content-Type': 'application/json' } }
-      )
-      setToken(resp.data.token)
-      navigate('/home', { replace: true })
+        { email, senha }
+      );
+      const { token, role } = resp.data;
+      setToken(token);
+
+      //  ↙︎ INSIRA AQUI A LÓGICA DE REDIRECIONAMENTO POR ROLE:
+      if (role === 'CLIENTE') {
+        navigate('/cliente/dashboard', { replace: true });
+      } else if (role === 'PROFISSIONAL') {
+        navigate('/profissional/dashboard', { replace: true });
+      } else if (role === 'DONO_SALAO') {
+        navigate('/owner/dashboard', { replace: true });
+      } else {
+        // fallback genérico
+        navigate('/', { replace: true });
+      }
+
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const logout = () => {
     setToken(null)
