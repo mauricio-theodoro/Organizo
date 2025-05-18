@@ -1,0 +1,27 @@
+/* src/styles/Dashboard.css */
+
+/* Dashboard genérico */
+.dashboard {
+  text-align: left;
+  padding: 2rem 1rem;
+}
+.dashboard h1 {
+  color: var(--color-primary);
+  margin-bottom: .5rem;
+}
+.dashboard p {
+  margin-bottom: 1.5rem;
+  color: var(--color-muted);
+}
+/* Grid de cards em dashboards */
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+/* Área de ações simples */
+.dashboard-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
