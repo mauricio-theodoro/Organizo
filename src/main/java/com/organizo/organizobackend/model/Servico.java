@@ -3,6 +3,7 @@ package com.organizo.organizobackend.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * Entidade que representa um tipo de serviço oferecido
@@ -33,6 +34,20 @@ public class Servico {
 
     @Column(name = "atualizado_em")
     private LocalDateTime atualizadoEm; // Timestamp de atualização
+
+    // 1) Vínculo com Salao
+    @ManyToOne
+    @JoinColumn(name = "salao_id", nullable = false)
+    private Salao salao;
+
+    // 2) Vínculo com Profissional (M–N)
+    @ManyToMany
+    @JoinTable(
+            name = "servico_profissional",
+            joinColumns = @JoinColumn(name = "servico_id"),
+            inverseJoinColumns = @JoinColumn(name = "profissional_id")
+    )
+    private Set<Profissional> profissionais;
 
     public Servico() { }
 
@@ -90,6 +105,20 @@ public class Servico {
 
     public void setAtualizadoEm(LocalDateTime atualizadoEm) {
         this.atualizadoEm = atualizadoEm;
+    }
+
+    public Salao getSalao() {
+        return salao;
+    }
+    public void setSalao(Salao salao) {
+        this.salao = salao;
+    }
+
+    public Set<Profissional> getProfissionais() {
+        return profissionais;
+    }
+    public void setProfissionais(Set<Profissional> profissionais) {
+        this.profissionais = profissionais;
     }
 
     @PrePersist

@@ -25,8 +25,7 @@ public interface ServicoService {
      */
     ServicoDTO buscarPorId(Long id);
 
-    ServicoDTO criar(ServicoDTO dto);
-    void deletar(Long id);
+        void deletar(Long id);
     ServicoDTO atualizar(Long id, ServicoDTO dto);
     ServicoDTO criar(Long salaoId, ServicoDTO dto);
 
