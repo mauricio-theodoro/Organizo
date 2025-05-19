@@ -39,13 +39,19 @@ public class ServicoServiceImpl implements ServicoService {
         this.profRepo = profRepo;
     }
 
+    @Override
+    public Page<ServicoDTO> listar(Pageable pageable) {
+        return servicoRepo.findAll(pageable)
+                .map(mapper::toDto);
+    }
+
     /**
      * Lista serviços de forma paginada.
      * Cache "servicos" to reduce load on database.
      */
     @Override
-    public Page<ServicoDTO> listar(Pageable pageable) {
-        return servicoRepo.findAll(pageable)
+    public Page<ServicoDTO> listarPorSalao(Long salaoId, Pageable pageable) {
+        return servicoRepo.findBySalaoId(salaoId, pageable)
                 .map(mapper::toDto);
     }
 

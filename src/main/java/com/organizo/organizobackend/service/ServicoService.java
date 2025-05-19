@@ -12,21 +12,14 @@ import java.util.List;
  */
 public interface ServicoService {
 
-    /**
-     * Retorna uma página de serviços cadastrados.
-     * @param pageable parâmetros de paginação e ordenação
-     */
+    // lista todos os serviços
     Page<ServicoDTO> listar(Pageable pageable);
 
-    /**
-     * Busca um serviço pelo seu ID.
-     * @param id identificador do serviço
-     * @return DTO do serviço encontrado
-     */
+    // lista serviços de um salão específico
+    Page<ServicoDTO> listarPorSalao(Long salaoId, Pageable pageable);
+
     ServicoDTO buscarPorId(Long id);
-
-        void deletar(Long id);
-    ServicoDTO atualizar(Long id, ServicoDTO dto);
     ServicoDTO criar(Long salaoId, ServicoDTO dto);
-
+    ServicoDTO atualizar(Long id, ServicoDTO dto);
+    void deletar(Long id);
 }
