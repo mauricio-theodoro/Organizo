@@ -1,4 +1,3 @@
-// src/pages/ServiceList.tsx
 import React, { useState, useEffect } from 'react';
 import { ServiceCard, Service } from '../components/ServiceCard';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -44,25 +43,29 @@ export default function ServiceList() {
   return (
     <main className="container py-6">
       <h1 className="text-2xl font-bold mb-4">Serviços disponíveis</h1>
+
+      {/* GRID RESPONSIVA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {data?.content.map(s => (
           <ServiceCard
             key={s.id}
             service={s}
-            onSelect={(serviceId) =>
+            onSelect={serviceId =>
               navigate(`/salons/${salonId}/services/${serviceId}/professionals`)
             }
           />
         ))}
       </div>
 
-      {/* Paginação */}
+      {/* PAGINAÇÃO */}
       <div className="mt-6 flex justify-center space-x-2">
         <button
           disabled={page === 0}
           onClick={() => setPage(p => p - 1)}
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >Anterior</button>
+        >
+          Anterior
+        </button>
         {[...Array(data?.totalPages || 0)].map((_, i) => (
           <button
             key={i}
@@ -70,13 +73,17 @@ export default function ServiceList() {
             className={`px-3 py-1 rounded ${
               i === page ? 'bg-primary text-white' : 'bg-gray-200'
             }`}
-          >{i + 1}</button>
+          >
+            {i + 1}
+          </button>
         ))}
         <button
           disabled={page + 1 >= (data?.totalPages || 0)}
           onClick={() => setPage(p => p + 1)}
           className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >Próxima</button>
+        >
+          Próxima
+        </button>
       </div>
     </main>
   );

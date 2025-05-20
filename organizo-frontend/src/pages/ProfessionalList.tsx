@@ -11,55 +11,77 @@ interface Paginated<T> {
 }
 
 export default function ProfessionalList() {
-  const { salonId, serviceId } = useParams<{ salonId: string; serviceId: string }>();
+  const { salonId, serviceId } = useParams<{
+    salonId: string;
+    serviceId: string;
+  }>();
   const navigate = useNavigate();
   const [data, setData] = useState<Paginated<Professional> | null>(null);
+  const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get<Paginated<Professional>>(
-      `${import.meta.env.VITE_API_URL}/saloes/${salonId}/servicos/${serviceId}/profissionais`,
-      { params: { page: 0, size: 6 } }
-    )
-    .then(resp => setData(resp.data))
-    .catch(() => {/* TODO: Toast de erro */})
-    .finally(() => setLoading(false));
-  }, [salonId, serviceId]);
+    setLoading(true);
+    axios
+      .get<Paginated<Professional>>(
+        `${import.meta.env.VITE_API_URL}/saloes/${salonId}/servicos/${serviceId}/profissionais`,
+        { params: { page, size: 6 } }
+      )
+      .then((resp) => setData(resp.data))
+      .catch(() => {
+        /* TODO: mostrar toast de erro */
+      })
+      .finally(() => setLoading(false));
+  }, [salonId, serviceId, page]);
 
   if (loading) return <Spinner />;
 
   return (
-    <main className="container py-6">
-      <h1 className="text-2xl font-bold mb-4">Profissionais</h1>
+    <main className="container">
+      <h1 className="dashboard__title">Profissionais</h1>
+
+      {/* grade de cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data?.content.map(p => (
+        {data?.content.map((p) => (
           <ProfessionalCard
             key={p.id}
             professional={p}
-            onSelect={id => navigate(`/book/${salonId}/${serviceId}/${id}/calendar`)}
+            onSelect={(id) =>
+              navigate(`/book/${salonId}/${serviceId}/${id}/calendar`)
+            }
           />
         ))}
       </div>
-    <div className="mt-6 flex justify-center space-x-2">
+
+      {/* paginação */}
+      <div className="mt-6 flex justify-center space-x-2">
         <button
+          className="btn"
           disabled={page === 0}
-          onClick={() => setPage(p => p - 1)}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >Anterior</button>
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Anterior
+        </button>
+
         {[...Array(data?.totalPages || 0)].map((_, i) => (
           <button
             key={i}
-            onClick={() => setPage(i)}
-            className={`px-3 py-1 rounded ${
-              i === page ? 'bg-primary text-white' : 'bg-gray-200'
+            className={`btn ${
+              i === page ? 'btn--primary' : ''
             }`}
-          >{i + 1}</button>
+            onClick={() => setPage(i)}
+          >
+            {i + 1}
+          </button>
         ))}
+
         <button
+          className="btn"
           disabled={page + 1 >= (data?.totalPages || 0)}
-          onClick={() => setPage(p => p + 1)}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-        >Próxima</button>
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Próxima
+        </button>
       </div>
     </main>
   );
