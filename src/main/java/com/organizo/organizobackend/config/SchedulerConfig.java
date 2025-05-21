@@ -1,3 +1,4 @@
+
 package com.organizo.organizobackend.config;
 
 import com.organizo.organizobackend.model.Agendamento;
@@ -15,33 +16,43 @@ import java.util.List;
 @EnableScheduling
 public class SchedulerConfig {
 
-    @Autowired private AgendamentoRepository agRepo;
-    @Autowired private EmailService emailService;
+    private final AgendamentoRepository agRepo;
+    private final EmailService emailService;
+
+    @Autowired
+    public SchedulerConfig(AgendamentoRepository agRepo,
+                           EmailService emailService) {
+        this.agRepo        = agRepo;
+        this.emailService  = emailService;
+    }
 
     /** Executa a cada 15 minutos */
     @Scheduled(fixedRate = 15 * 60 * 1000)
     public void enviarLembretes() {
-        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime agora  = LocalDateTime.now();
         LocalDateTime limite = agora.plusHours(2);
-        List<Agendamento> proximos = agRepo.findAll().stream()
-                .filter(a ->
-                        a.getStatus().toString().equals("CONFIRMADO") &&
-                                a.getDataHoraAgendada().isAfter(agora) &&
-                                a.getDataHoraAgendada().isBefore(limite)
-                ).toList();
 
+        List<Agendamento> proximos = agRepo.findConfirmedBetween(agora, limite);
         for (Agendamento ag : proximos) {
-            String texto = String.format(
-                    "Olá %s,\n\nEste é um lembrete do seu agendamento de %s hoje às %s.\n\nAtenciosamente.",
-                    ag.getCliente().getNome(),
-                    ag.getServico().getNome(),
-                    ag.getDataHoraAgendada().toLocalTime()
-            );
-            emailService.sendSimpleMessage(
-                    ag.getCliente().getEmail(),
-                    "Lembrete de Agendamento",
-                    texto
-            );
+            try {
+                String texto = String.format(
+                        "Olá %s,\n\nEste é um lembrete do seu agendamento de %s hoje às %s.\n\nAtenciosamente.",
+                        ag.getCliente().getNome(),
+                        ag.getServico().getNome(),
+                        ag.getDataHoraAgendada().toLocalTime()
+                );
+                emailService.sendSimpleMessage(
+                        ag.getCliente().getEmail(),
+                        "Lembrete de Agendamento",
+                        texto
+                );
+            } catch (Exception ex) {
+                // Só loga o erro e continua
+                System.err.printf(
+                        "Falha ao enviar lembrete para Agendamento[id=%d]: %s%n",
+                        ag.getId(), ex.getMessage()
+                );
+            }
         }
     }
 }

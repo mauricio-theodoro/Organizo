@@ -7,7 +7,10 @@ import org.mapstruct.Mapper;
 /**
  * Converte entidade Salao <-> DTO usando MapStruct.
  */
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        imports = { java.util.stream.Collectors.class }
+)
 public interface SalaoMapper {
 
     SalaoDTO toDto(Salao entity);

@@ -5,6 +5,8 @@ import com.organizo.organizobackend.model.Profissional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -29,4 +31,15 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     Page<Agendamento> findByProfissionalId(Long profissionalId, Pageable pageable);
 
     boolean existsByProfissionalAndDataHoraAgendada(Profissional p, LocalDateTime dt);
+
+    @Query("""
+      SELECT a FROM Agendamento a
+       WHERE a.status = 'CONFIRMADO'
+         AND a.dataHoraAgendada > :inicio
+         AND a.dataHoraAgendada < :fim
+    """)
+    List<Agendamento> findConfirmedBetween(
+            @Param("inicio") LocalDateTime inicio,
+            @Param("fim")    LocalDateTime fim
+    );
 }
