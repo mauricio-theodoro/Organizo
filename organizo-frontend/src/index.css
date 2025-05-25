@@ -13,20 +13,19 @@
    2. VARIÁVEIS GLOBAIS
    ========================================================================== */
 :root {
-  /* Cores primárias */
-  --color-primary: #ff4081;
-  --color-secondary: #333;
-  --color-accent:    #ff6f00; /* Laranja vívido */
-  --color-bg:        #f4f6f8; /* Fundo neutro claro */
-  --color-surface:   #ffffff; /* Superfícies (cards, containers) */
+  /* Paleta principal */
+  --color-bg:        #FAF6F1; /* fundo geral */
+  --color-surface:   #FFFFFF; /* cards e containers */
+  --color-text:      #212121; /* texto principal */
+  --color-muted:     #616161; /* texto secundário */
 
-  /* Texto */
-  --color-text:      #212121; /* Texto principal */
-  --color-muted:     #616161; /* Texto secundário */
+  /* Branding */
+  --color-organizo:  #F2E6DA; /* texto/logo “Organizô” */
+  --color-calendar:  #D7C4C1; /* fundo do calendário */
 
   /* Estados */
-  --color-success:   #2e7d32;
-  --color-error:     #c62828;
+  --color-success:   #2E7D32;
+  --color-error:     #C62828;
 
   /* Outros */
   --radius:          0.375rem;
@@ -46,7 +45,6 @@ body {
 /* ==========================================================================
    4. CONTAINERS
    ========================================================================== */
-/* Container centralizado com padding */
 .container {
   max-width: 1024px;
   margin: 0 auto;
@@ -56,7 +54,6 @@ body {
 /* ==========================================================================
    5. BOTÕES
    ========================================================================== */
-/* Botão base */
 .btn {
   display: inline-block;
   padding: 0.75rem 1.5rem;
@@ -68,29 +65,25 @@ body {
   text-align: center;
 }
 
-/* Variante primária */
 .btn--primary {
-  background-color: var(--color-primary);
+  background-color: var(--color-organizo);
   color: #fff;
 }
 .btn--primary:hover {
-  /* escurecer 10%: multiplicar o valor HSL ou ajustar manualmente */
-  background-color: #0b3a8a; /* tom manual mais escuro */
+  filter: brightness(0.9);
 }
 
-/* Variante secundária (accent) */
 .btn--secondary {
-  background-color: var(--color-accent);
+  background-color: var(--color-calendar);
   color: #fff;
 }
 .btn--secondary:hover {
-  background-color: #e65c00; /* tom manual mais escuro */
+  filter: brightness(0.9);
 }
 
 /* ==========================================================================
    6. CARD
    ========================================================================== */
-/* Estrutura básica de card */
 .card {
   background-color: var(--color-surface);
   border-radius: var(--radius);
@@ -113,10 +106,27 @@ body {
 .landing {
   text-align: center;
   padding: 4rem 1rem;
+  background-color: var(--color-surface);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  position: relative;
+  overflow: hidden;
 }
+
+/* Logo centralizada com imagem de background suave */
+.landing::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('./img/organizo_logo.jpg') center/cover no-repeat;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
 .landing h1 {
   font-size: 2.5rem;
   margin-bottom: 1rem;
+  color: var(--color-organizo);
 }
 .landing p {
   font-size: 1.125rem;
@@ -128,9 +138,8 @@ body {
 }
 
 /* ==========================================================================
-   8. AUTENTICAÇÃO (LOGIN / REGISTRO)
+   8. AUTENTICAÇÃO
    ========================================================================== */
-/* Container do formulário de autenticação */
 .auth-container {
   width: 100%;
   max-width: 400px;
@@ -138,11 +147,11 @@ body {
   background-color: var(--color-surface);
   padding: 2rem;
   border-radius: var(--radius);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 .auth-container h1 {
   margin-bottom: 1.5rem;
-  color: var(--color-primary);
+  color: var(--color-organizo);
   text-align: center;
 }
 .auth-form label {
@@ -175,12 +184,11 @@ body {
 .dashboard h1,
 .salons h1 {
   margin-bottom: 1rem;
-  color: var(--color-primary);
+  color: var(--color-organizo);
 }
 .dashboard > .btn {
   margin-bottom: 2rem;
 }
-/* Cards de salão */
 .salons .card {
   display: flex;
   flex-direction: column;
@@ -191,54 +199,29 @@ body {
 }
 
 /* ==========================================================================
-   10. RESPONSIVIDADE (MOBILE-FIRST)
+   10. RESPONSIVIDADE
    ========================================================================== */
-/* Para telas até 600px */
 @media (max-width: 600px) {
-  /* Ajusta heading do landing */
-  .landing h1 {
-    font-size: 2rem;
-  }
-  /* Botões full-width */
-  .btn {
-    width: 100%;
-  }
-  /* Empilha ações no landing */
+  .landing h1 { font-size: 2rem; }
+  .btn       { width: 100%; }
   .landing__actions {
     display: flex;
     flex-direction: column;
     gap: 1rem;
   }
-  /* Formulário de autentic. com margens reduzidas */
-  .auth-container {
-    margin: 2rem 1rem;
-  }
+  .auth-container { margin: 2rem 1rem; }
 }
 
 /* ==========================================================================
-   UTILITÁRIOS DE GRID
+   11. UTILITÁRIOS DE GRID
    ========================================================================== */
-.grid {
-  display: grid;
-}
-
-.grid-cols-1 {
-  grid-template-columns: 1fr;
-}
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: 1fr; }
 
 @media (min-width: 600px) {
-  .sm\:grid-cols-2 {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2,1fr); }
 }
-
 @media (min-width: 1024px) {
-  .lg\:grid-cols-3 {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3,1fr); }
 }
-
-.gap-6 {
-  gap: 1.5rem;
-}
-
+.gap-6 { gap: 1.5rem; }

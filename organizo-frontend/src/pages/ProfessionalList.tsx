@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ProfessionalCard, Professional } from '../components/ProfessionalCard';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
-import Spinner from '../components/ui/Spinner';
+import api from '../api/axiosConfig';            // nosso axios configurado
+import { toast } from 'react-hot-toast';
+import { Spinner } from '../components/ui/Spinner';
 
 interface Paginated<T> {
   content: T[];
@@ -16,69 +17,74 @@ export default function ProfessionalList() {
     serviceId: string;
   }>();
   const navigate = useNavigate();
-  const [data, setData] = useState<Paginated<Professional> | null>(null);
-  const [page, setPage] = useState(0);
+
+  const [data, setData]       = useState<Paginated<Professional> | null>(null);
+  const [page, setPage]       = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    axios
-      .get<Paginated<Professional>>(
-        `${import.meta.env.VITE_API_URL}/saloes/${salonId}/servicos/${serviceId}/profissionais`,
-        { params: { page, size: 6 } }
-      )
-      .then((resp) => setData(resp.data))
-      .catch(() => {
-        /* TODO: mostrar toast de erro */
-      })
-      .finally(() => setLoading(false));
+    api.get<Paginated<Professional>>(
+      `/saloes/${salonId}/servicos/${serviceId}/profissionais`,
+      { params: { page, size: 6 } }
+    )
+    .then(resp => setData(resp.data))
+    .catch(err => {
+      toast.error('Erro ao carregar profissionais');
+      console.error(err);
+    })
+    .finally(() => setLoading(false));
   }, [salonId, serviceId, page]);
 
-  if (loading) return <Spinner />;
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
-    <main className="container">
-      <h1 className="dashboard__title">Profissionais</h1>
+    <main className="container py-6">
+      <h1 className="text-2xl font-bold mb-4">Profissionais</h1>
 
-      {/* grade de cards */}
+      {/* Grid responsivo de cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {data?.content.map((p) => (
+        {data?.content.map(p => (
           <ProfessionalCard
             key={p.id}
             professional={p}
-            onSelect={(id) =>
+            onSelect={id =>
               navigate(`/book/${salonId}/${serviceId}/${id}/calendar`)
             }
           />
         ))}
       </div>
 
-      {/* paginação */}
+      {/* Paginação */}
       <div className="mt-6 flex justify-center space-x-2">
         <button
-          className="btn"
+          className="btn btn--secondary"
           disabled={page === 0}
-          onClick={() => setPage((p) => p - 1)}
+          onClick={() => setPage(p => p - 1)}
         >
           Anterior
         </button>
-
         {[...Array(data?.totalPages || 0)].map((_, i) => (
           <button
             key={i}
             className={`btn ${
-              i === page ? 'btn--primary' : ''
+              i === page ? 'btn--primary' : 'btn--secondary'
             }`}
             onClick={() => setPage(i)}
           >
             {i + 1}
           </button>
         ))}
-
         <button
-          className="btn"
+          className="btn btn--secondary"
           disabled={page + 1 >= (data?.totalPages || 0)}
-          onClick={() => setPage((p) => p + 1)}
+          onClick={() => setPage(p => p + 1)}
         >
           Próxima
         </button>

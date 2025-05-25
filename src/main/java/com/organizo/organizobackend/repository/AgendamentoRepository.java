@@ -1,5 +1,6 @@
 package com.organizo.organizobackend.repository;
 
+import com.organizo.organizobackend.enums.StatusAgendamento;
 import com.organizo.organizobackend.model.Agendamento;
 import com.organizo.organizobackend.model.Profissional;
 import org.springframework.data.domain.Page;
@@ -41,5 +42,15 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
     List<Agendamento> findConfirmedBetween(
             @Param("inicio") LocalDateTime inicio,
             @Param("fim")    LocalDateTime fim
+    );
+
+    /**
+     * Busca todos os agendamentos confirmados
+     * com dataHoraAgendada entre 'start' e 'end'.
+     */
+    List<Agendamento> findAllByStatusAndDataHoraAgendadaBetween(
+            StatusAgendamento status,
+            LocalDateTime start,
+            LocalDateTime end
     );
 }
