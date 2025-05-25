@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -79,17 +80,21 @@ public class ProfissionalServiceImpl implements ProfissionalService {
         Salao salao = salaoRepo.findById(salaoId)
                 .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + salaoId));
 
-        Profissional entity = mapper.toEntity(dto);
-        entity.setSalao(salao);
-        // Carrega e associa serviços
-        Set<Servico> servicos = dto.getServicoIds().stream()
-                .map(id -> servRepo.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Serviço não encontrado: " + id)))
-                .collect(Collectors.toSet());
-        entity.setServicos(servicos);
+        Profissional prof = mapper.toEntity(dto);
+        prof.setSalao(salao);
 
-        // O campo cargo já foi mapeado pelo MapStruct
-        Profissional saved = repo.save(entity);
+        // vincula serviços *somente se vier lista não-nula*
+        if (dto.getServicoIds() != null) {
+            Set<Servico> servs = dto.getServicoIds().stream()
+                    .map(id -> servRepo.findById(id)
+                            .orElseThrow(() -> new RuntimeException("Serviço não encontrado: " + id)))
+                    .collect(Collectors.toSet());
+            prof.setServicos(servs);
+        } else {
+            prof.setServicos(Collections.emptySet());
+        }
+
+        Profissional saved = repo.save(prof);
         return mapper.toDto(saved);
     }
 }

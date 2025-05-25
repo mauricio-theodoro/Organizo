@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -76,12 +77,17 @@ public class ServicoServiceImpl implements ServicoService {
         Servico serv = mapper.toEntity(dto);
         serv.setSalao(salao);
 
-        // 3) associa profissionais
-        Set<Profissional> pros = dto.getProfissionalIds().stream()
-                .map(id -> profRepo.findById(id)
-                        .orElseThrow(() -> new RuntimeException("Profissional não encontrado: " + id)))
-                .collect(Collectors.toSet());
-        serv.setProfissionais(pros);
+        // 3) associa profissionais *somente se vier lista não-nula*
+        if (dto.getProfissionalIds() != null) {
+            Set<Profissional> pros = dto.getProfissionalIds().stream()
+                    .map(id -> profRepo.findById(id)
+                            .orElseThrow(() -> new RuntimeException("Profissional não encontrado: " + id)))
+                    .collect(Collectors.toSet());
+            serv.setProfissionais(pros);
+        } else {
+            // evita NullPointer, inicializa vazio
+            serv.setProfissionais(Collections.emptySet());
+        }
 
         // 4) salva e retorna DTO
         Servico saved = servicoRepo.save(serv);
