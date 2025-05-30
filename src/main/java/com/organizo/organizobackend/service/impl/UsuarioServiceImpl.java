@@ -42,10 +42,16 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         // Converte string de role para enum
         Role papel = Role.valueOf(dto.getRole());
-        Usuario u = new Usuario(dto.getEmail(), encoder.encode(dto.getSenha()), dto.getNome(), papel);
+        Usuario u = new Usuario(dto.getEmail(),
+                encoder.encode(dto.getSenha()),
+                dto.getNome(),
+                papel);
         Usuario salvo = repo.save(u);
         String token = jwtUtil.gerarToken(salvo.getEmail());
-        return new AuthResponse(token, salvo.getEmail(), salvo.getNome(), salvo.getRole().name());
+        return new AuthResponse(token,
+                salvo.getEmail(),
+                salvo.getNome(),
+                salvo.getRole().name());
     }
 
     @Override
@@ -56,6 +62,9 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new RuntimeException("Senha inválida");
         }
         String token = jwtUtil.gerarToken(u.getEmail());
-        return new AuthResponse(token, u.getEmail(), u.getNome(), u.getRole().name());
+        return new AuthResponse(token,
+                u.getEmail(),
+                u.getNome(),
+                u.getRole().name());
     }
 }

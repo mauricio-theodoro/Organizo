@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -71,6 +70,7 @@ public class ProfissionalServiceImpl implements ProfissionalService {
         return mapper.toDto(p);
     }
 
+
     /**
      * Cria um novo profissional dentro de um salão,
      * associando cargo e serviços.
@@ -83,7 +83,7 @@ public class ProfissionalServiceImpl implements ProfissionalService {
         Profissional prof = mapper.toEntity(dto);
         prof.setSalao(salao);
 
-        // vincula serviços *somente se vier lista não-nula*
+       /* // vincula serviços *somente se vier lista não-nula*
         if (dto.getServicoIds() != null) {
             Set<Servico> servs = dto.getServicoIds().stream()
                     .map(id -> servRepo.findById(id)
@@ -93,8 +93,23 @@ public class ProfissionalServiceImpl implements ProfissionalService {
         } else {
             prof.setServicos(Collections.emptySet());
         }
-
+*/
         Profissional saved = repo.save(prof);
         return mapper.toDto(saved);
+    }
+
+    @Override
+    public ProfissionalDTO vincularServicos(Long profissionalId, Set<Long> servicoIds) {
+        Profissional p = repo.findById(profissionalId)
+                .orElseThrow(() -> new RuntimeException("Profissional não encontrado: " + profissionalId));
+
+        Set<Servico> servicos = servicoIds.stream()
+                .map(sid -> servRepo.findById(sid)
+                        .orElseThrow(() -> new RuntimeException("Serviço não encontrado: " + sid)))
+                .collect(Collectors.toSet());
+        p.setServicos(servicos);
+
+        Profissional updated = repo.save(p);
+        return mapper.toDto(updated);
     }
 }

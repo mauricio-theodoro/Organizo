@@ -46,8 +46,8 @@ public class ProfissionalDTO {
     @NotNull
     private CargoProfissional cargo;
 
-    @NotNull
-    private Set<Long> servicoIds;
+    //@NotNull
+    //private Set<Long> servicoIds;
 
     @Schema(description = "Data de criação do registro")
     private LocalDateTime criadoEm;
@@ -106,13 +106,13 @@ public class ProfissionalDTO {
         this.cargo = cargo;
     }
 
-    public Set<Long> getServicoIds() {
-        return servicoIds;
-    }
+    //public Set<Long> getServicoIds() {
+    //    return servicoIds;
+    //}
 
-    public void setServicoIds(Set<Long> servicoIds) {
-        this.servicoIds = servicoIds;
-    }
+    //public void setServicoIds(Set<Long> servicoIds) {
+    //    this.servicoIds = servicoIds;
+    //}
 
     public LocalDateTime getCriadoEm() {
         return criadoEm;

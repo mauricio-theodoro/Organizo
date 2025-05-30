@@ -4,7 +4,6 @@ import com.organizo.organizobackend.dto.ClienteDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 
 /**
  * Contrato da camada de serviço para Cliente.

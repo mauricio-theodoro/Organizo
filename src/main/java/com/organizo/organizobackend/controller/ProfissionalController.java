@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 /**
  * Endpoints REST para manipular Profissionais com paginação.
  */
@@ -79,5 +81,16 @@ public class ProfissionalController {
             @PathVariable Long id) {
         // salaoId validado implicitamente ou poderia checar se o profissional pertence ao salão
         return ResponseEntity.ok(service.buscarPorId(id));
+    }
+
+    @Operation(summary = "Vincula serviços existentes a um profissional")
+    @PreAuthorize("hasRole('DONO_SALAO')")
+    @PutMapping("/profissionais/{id}/servicos")
+    public ResponseEntity<ProfissionalDTO> vincularServicos(
+            @PathVariable Long id,
+            @RequestBody Set<Long> servicoIds
+    ) {
+        ProfissionalDTO atualizado = service.vincularServicos(id, servicoIds);
+        return ResponseEntity.ok(atualizado);
     }
 }

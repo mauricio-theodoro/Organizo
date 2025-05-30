@@ -19,7 +19,10 @@ public interface ServicoService {
     Page<ServicoDTO> listarPorSalao(Long salaoId, Pageable pageable);
 
     ServicoDTO buscarPorId(Long id);
+
     ServicoDTO criar(Long salaoId, ServicoDTO dto);
+
     ServicoDTO atualizar(Long id, ServicoDTO dto);
+
     void deletar(Long id);
 }

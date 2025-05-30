@@ -4,7 +4,8 @@ import com.organizo.organizobackend.dto.ProfissionalDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.util.Set;
+
 
 /**
  * Contrato de serviços para Profissional.
@@ -31,4 +32,6 @@ public interface ProfissionalService {
     // Novo método para criar profissional atrelado a salão
     ProfissionalDTO criar(Long salaoId, ProfissionalDTO dto);
 
+
+    ProfissionalDTO vincularServicos(Long profissionalId, Set<Long> servicoIds);
 }

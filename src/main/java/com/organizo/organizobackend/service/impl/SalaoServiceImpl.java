@@ -12,8 +12,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementação da camada de serviço para Salão,
@@ -72,6 +70,8 @@ public class SalaoServiceImpl implements SalaoService {
     public void deletar(Long id) {
         salaoRepo.deleteById(id);
     }
+
+
 
     /**
      * Converte entidade Salao em DTO, incluindo CNPJ.
