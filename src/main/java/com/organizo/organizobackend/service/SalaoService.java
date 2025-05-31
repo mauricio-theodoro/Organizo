@@ -37,4 +37,6 @@ public interface SalaoService {
      * @param id identificador do salão a remover
      */
     void deletar(Long id);
+
+    SalaoDTO atualizar(Long id, SalaoDTO dto);
 }

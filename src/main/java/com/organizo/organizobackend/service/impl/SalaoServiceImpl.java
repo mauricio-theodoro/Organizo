@@ -3,7 +3,9 @@ package com.organizo.organizobackend.service.impl;
 import com.organizo.organizobackend.dto.SalaoDTO;
 import com.organizo.organizobackend.mapper.SalaoMapper;
 import com.organizo.organizobackend.model.Salao;
+import com.organizo.organizobackend.model.Usuario;
 import com.organizo.organizobackend.repository.SalaoRepository;
+import com.organizo.organizobackend.repository.UsuarioRepository;
 import com.organizo.organizobackend.service.SalaoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -22,11 +24,15 @@ public class SalaoServiceImpl implements SalaoService {
 
     private final SalaoRepository salaoRepo;
     private final SalaoMapper mapper;
+    private final UsuarioRepository usuarioRepo;
 
     @Autowired
-    public SalaoServiceImpl(SalaoRepository salaoRepo, SalaoMapper mapper) {
+    public SalaoServiceImpl(SalaoRepository salaoRepo,
+                            SalaoMapper mapper,
+                            UsuarioRepository usuarioRepo) {
         this.salaoRepo = salaoRepo;
         this.mapper = mapper;
+        this.usuarioRepo = usuarioRepo;
     }
 
     /**
@@ -57,9 +63,19 @@ public class SalaoServiceImpl implements SalaoService {
     @Override
     @CacheEvict(value = "saloes", allEntries = true)
     public SalaoDTO criar(SalaoDTO dto) {
-        Salao entity = mapper.toEntity(dto);
-        Salao salvo = salaoRepo.save(entity);
-        return mapper.toDto(salvo);
+        // 1) verificamos se existe o usuário (owner) enviado pelo front
+        Usuario owner = usuarioRepo.findById(dto.getOwnerId())
+                .orElseThrow(() -> new RuntimeException("Usuário (owner) não encontrado: " + dto.getOwnerId()));
+
+        // 2) convertemos o DTO para entidade (MAPSTRIP ignora owner)
+        Salao salaEntity = mapper.toEntity(dto);
+
+        // 3) fazemos o vínculo explícito
+        salaEntity.setOwner(owner);
+
+        // 4) salvamos e retornamos como DTO
+        Salao saved = salaoRepo.save(salaEntity);
+        return mapper.toDto(saved);
     }
 
     /**
@@ -69,6 +85,29 @@ public class SalaoServiceImpl implements SalaoService {
     @CacheEvict(value = "saloes", allEntries = true)
     public void deletar(Long id) {
         salaoRepo.deleteById(id);
+    }
+
+    @Override
+    public SalaoDTO atualizar(Long id, SalaoDTO dto) {
+        // buscamos o salão já existente
+        Salao existente = salaoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + id));
+
+        // atualizamos campos simples
+        existente.setNome(dto.getNome());
+        existente.setCnpj(dto.getCnpj());
+        existente.setEndereco(dto.getEndereco());
+        existente.setTelefone(dto.getTelefone());
+
+        // (opcional) permitir trocar owner? Geralmente não trocamos, mas se quiser:
+        if (dto.getOwnerId() != null && !dto.getOwnerId().equals(existente.getOwner().getId())) {
+            Usuario novoOwner = usuarioRepo.findById(dto.getOwnerId())
+                    .orElseThrow(() -> new RuntimeException("Usuário (novo owner) não encontrado: " + dto.getOwnerId()));
+            existente.setOwner(novoOwner);
+        }
+
+        Salao saved = salaoRepo.save(existente);
+        return mapper.toDto(saved);
     }
 
 

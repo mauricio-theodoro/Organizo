@@ -3,6 +3,8 @@ package com.organizo.organizobackend.model;
 import com.organizo.organizobackend.enums.Role;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Representa um usuário do sistema (cliente ou dono de salão).
@@ -30,6 +32,12 @@ public class Usuario {
 
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
+
+    // ===========================================================
+    // NOVO: um usuário (quando for DONO_SALAO) pode ter vários salões
+    // ===========================================================
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Salao> saloes = new HashSet<>();
 
     /** Construtor padrão exigido pelo JPA */
     public Usuario() { }
@@ -79,6 +87,11 @@ public class Usuario {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    // ===== Novo getter para salões =====
+    public Set<Salao> getSaloes() {
+        return saloes;
     }
     // ===== Hook JPA =====
 

@@ -40,6 +40,12 @@ public class SalaoDTO {
     @Schema(description = "Data de última atualização do registro")
     private LocalDateTime atualizadoEm;
 
+    // ========================================================
+    // NOVO CAMPO: o ID do usuário (owner) ao qual este salão pertence.
+    // ========================================================
+    @Schema(description = "ID do usuário que é dono deste salão", example = "5")
+    private Long ownerId;
+
     // ===== Getters & Setters =====
 
     public Long getId() {
@@ -95,5 +101,12 @@ public class SalaoDTO {
 
     public void setAtualizadoEm(LocalDateTime atualizadoEm) {
         this.atualizadoEm = atualizadoEm;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
     }
 }

@@ -32,6 +32,13 @@ public class Salao {
     @Column(name = "atualizado_em", nullable = false)
     private LocalDateTime atualizadoEm;
 
+    // =========================================================
+    // NOVO: referência ao "dono" (usuário) de cada salão
+    // =========================================================
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", nullable = false)
+    private Usuario owner;
+
     public Salao() { }
 
     // ===== Getters & Setters =====
@@ -76,6 +83,14 @@ public class Salao {
         return atualizadoEm;
     }
 
+    // ===== Novo getter/setter para owner =====
+    public Usuario getOwner() {
+        return owner;
+    }
+    public void setOwner(Usuario owner) {
+        this.owner = owner;
+    }
+
     // ===== Hooks JPA =====
 
     @PrePersist
@@ -89,4 +104,6 @@ public class Salao {
     protected void preUpdate() {
         this.atualizadoEm = LocalDateTime.now();
     }
+
+
 }

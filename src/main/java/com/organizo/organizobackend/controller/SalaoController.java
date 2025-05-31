@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+
 /**
  * Endpoints REST para manipular Salões com suporte a paginação.
  */
@@ -73,6 +74,17 @@ public class SalaoController {
     public ResponseEntity<SalaoDTO> criar(@Valid @RequestBody SalaoDTO dto) {
         SalaoDTO criado = salaoService.criar(dto);
         return ResponseEntity.status(201).body(criado);
+    }
+
+    @Operation(summary = "Atualiza um salão", description = "Somente DONO_SALAO do salão ou ADMIN")
+    @PreAuthorize("hasRole('DONO_SALAO') or hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<SalaoDTO> atualizar(
+            @PathVariable Long id,
+            @RequestBody SalaoDTO dto) {
+        // opcional: certificar que o usuário logado é, de fato, o owner
+        SalaoDTO atualizado = salaoService.atualizar(id, dto);
+        return ResponseEntity.ok(atualizado);
     }
 
     /**
