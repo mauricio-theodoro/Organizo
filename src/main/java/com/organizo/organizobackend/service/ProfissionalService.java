@@ -34,4 +34,8 @@ public interface ProfissionalService {
 
 
     ProfissionalDTO vincularServicos(Long profissionalId, Set<Long> servicoIds);
+
+    ProfissionalDTO atualizar(Long id, ProfissionalDTO dto);
+
+    void deletar(Long id);
 }

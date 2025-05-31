@@ -43,11 +43,18 @@ public class ProfissionalDTO {
     @NotNull(message = "salaoId é obrigatório")
     private Long salaoId;
 
+    @Schema(description = "Cargo/função (ex.: MANICURE, CABELEREIRO)", required = true, example = "MANICURE")
     @NotNull
     private CargoProfissional cargo;
 
-    //@NotNull
-    //private Set<Long> servicoIds;
+    /**
+     * IDs dos serviços habilitados para este profissional.
+     * Opcional na criação (pode vir nulo ou vazio).
+     * Se vier preenchido, será ignorado no momento de criar;
+     * o vínculo será feito somente no PUT /api/profissionais/{id}/servicos.
+     */
+    @Schema(description = "IDs dos serviços habilitados para este profissional (opcional na criação)")
+    private Set<Long> servicoIds;
 
     @Schema(description = "Data de criação do registro")
     private LocalDateTime criadoEm;
@@ -106,13 +113,13 @@ public class ProfissionalDTO {
         this.cargo = cargo;
     }
 
-    //public Set<Long> getServicoIds() {
-    //    return servicoIds;
-    //}
+    public Set<Long> getServicoIds() {
+        return servicoIds;
+    }
 
-    //public void setServicoIds(Set<Long> servicoIds) {
-    //    this.servicoIds = servicoIds;
-    //}
+    public void setServicoIds(Set<Long> servicoIds) {
+        this.servicoIds = servicoIds;
+    }
 
     public LocalDateTime getCriadoEm() {
         return criadoEm;

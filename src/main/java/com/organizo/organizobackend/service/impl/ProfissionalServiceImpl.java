@@ -1,6 +1,7 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.ProfissionalDTO;
+import com.organizo.organizobackend.exception.ResourceNotFoundException;
 import com.organizo.organizobackend.mapper.ProfissionalMapper;
 import com.organizo.organizobackend.model.Profissional;
 import com.organizo.organizobackend.model.Salao;
@@ -77,25 +78,17 @@ public class ProfissionalServiceImpl implements ProfissionalService {
      */
     @Override
     public ProfissionalDTO criar(Long salaoId, ProfissionalDTO dto) {
+        // 1) verificar se o salão existe
         Salao salao = salaoRepo.findById(salaoId)
-                .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + salaoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Salão não encontrado: " + salaoId));
 
+        // 2) mapear DTO -> entidade (ignora serviços)
         Profissional prof = mapper.toEntity(dto);
         prof.setSalao(salao);
 
-       /* // vincula serviços *somente se vier lista não-nula*
-        if (dto.getServicoIds() != null) {
-            Set<Servico> servs = dto.getServicoIds().stream()
-                    .map(id -> servRepo.findById(id)
-                            .orElseThrow(() -> new RuntimeException("Serviço não encontrado: " + id)))
-                    .collect(Collectors.toSet());
-            prof.setServicos(servs);
-        } else {
-            prof.setServicos(Collections.emptySet());
-        }
-*/
-        Profissional saved = repo.save(prof);
-        return mapper.toDto(saved);
+        // 3) salva sem atribuir ANY servicos ainda
+        Profissional salvo = repo.save(prof);
+        return mapper.toDto(salvo);
     }
 
     @Override
@@ -111,5 +104,29 @@ public class ProfissionalServiceImpl implements ProfissionalService {
 
         Profissional updated = repo.save(p);
         return mapper.toDto(updated);
+    }
+
+    @Override
+    public ProfissionalDTO atualizar(Long id, ProfissionalDTO dto) {
+        Profissional existente = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado: " + id));
+
+        existente.setNome(dto.getNome());
+        existente.setSobrenome(dto.getSobrenome());
+        existente.setEmail(dto.getEmail());
+        existente.setTelefone(dto.getTelefone());
+        existente.setCargo(dto.getCargo());
+        // obs.: não tratamos servicos aqui
+
+        Profissional atualizado = repo.save(existente);
+        return mapper.toDto(atualizado);
+    }
+
+    @Override
+    public void deletar(Long id) {
+        if (!repo.existsById(id)) {
+            throw new ResourceNotFoundException("Profissional não encontrado: " + id);
+        }
+        repo.deleteById(id);
     }
 }

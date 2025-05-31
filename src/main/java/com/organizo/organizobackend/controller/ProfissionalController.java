@@ -93,4 +93,25 @@ public class ProfissionalController {
         ProfissionalDTO atualizado = service.vincularServicos(id, servicoIds);
         return ResponseEntity.ok(atualizado);
     }
+
+    /** Atualiza dados básicos de um profissional (sem lidar com serviços). */
+    @Operation(summary = "Atualiza dados de um profissional", description = "Somente DONO_SALAO e PROFISSIONAL")
+    @PreAuthorize("hasAnyRole('DONO_SALAO','PROFISSIONAL')")
+    @PutMapping("/profissionais/{id}")
+    public ResponseEntity<ProfissionalDTO> atualizar(
+            @PathVariable Long id,
+            @RequestBody ProfissionalDTO dto) {
+        ProfissionalDTO atualizado = service.atualizar(id, dto);
+        return ResponseEntity.ok(atualizado);
+    }
+
+    /** Deleta um profissional. */
+    @Operation(summary = "Remove um profissional", description = "Somente DONO_SALAO")
+    @PreAuthorize("hasRole('DONO_SALAO')")
+    @DeleteMapping("/profissionais/{id}")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        service.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
 }
