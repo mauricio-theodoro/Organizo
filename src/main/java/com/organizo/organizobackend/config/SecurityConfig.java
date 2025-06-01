@@ -1,10 +1,12 @@
 package com.organizo.organizobackend.config;
 
+import com.organizo.organizobackend.enums.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -12,9 +14,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Configuração de segurança da aplicação.
- * Utiliza JWT para proteger endpoints e deixa públicos somente os necessários.
+ * Utiliza JWT e define permissões baseadas em URL/Método e Roles.
+ * Habilita segurança a nível de método (@PreAuthorize) para regras mais finas.
  */
 @Configuration
+@EnableMethodSecurity(prePostEnabled = true) // Habilita @PreAuthorize, @PostAuthorize
 public class SecurityConfig {
 
     @Autowired
@@ -27,46 +31,55 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // 1) Toda spec e JSON do OpenAPI
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-
-                        // 2) Os recursos do Swagger UI (HTML, JS, CSS, fontes…)
-                        .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/swagger-ui/index.html",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
-
-                        // libere o endpoint de erro (fallback do Spring)
+                        // 1. Endpoints Públicos
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**", "/swagger-resources/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll() // Registro e Login
+                        // Permitir visualização pública de salões, serviços e profissionais (para descoberta/agendamento)
+                        .requestMatchers(HttpMethod.GET, "/api/saloes", "/api/saloes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/servicos", "/api/servicos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/profissionais", "/api/profissionais/**").permitAll()
 
-                        // 3) Seus endpoints públicos
-                        .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET,  "/api/servicos/**", "/api/saloes/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/clientes", "/api/agendamentos").permitAll()
+                        // 2. Endpoints específicos para CLIENTE
+                        .requestMatchers(HttpMethod.POST, "/api/agendamentos").hasRole(Role.CLIENTE.name())
+                        // GET/PUT próprios dados (precisará de @PreAuthorize para garantir que é o próprio cliente)
+                        .requestMatchers(HttpMethod.GET, "/api/clientes/**").hasRole(Role.CLIENTE.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/clientes/**").hasRole(Role.CLIENTE.name())
+                        // GET/Cancelar próprios agendamentos (precisará de @PreAuthorize)
+                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/cliente/**").hasRole(Role.CLIENTE.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole(Role.CLIENTE.name())
 
-                        // 4) Demais regras por role…
-                        .requestMatchers(HttpMethod.GET,  "/api/clientes/**").hasRole("CLIENTE")
-                        .requestMatchers(HttpMethod.GET,  "/api/profissionais/**").hasRole("DONO_SALAO")
-                        .requestMatchers(HttpMethod.GET,  "/api/saloes/**").hasRole("DONO_SALAO")
-                        .requestMatchers(HttpMethod.PUT,  "/api/agendamentos/**").hasRole("CLIENTE")
+                        // 3. Endpoints específicos para PROFISSIONAL
+                        // GET/PUT próprios dados (precisará de @PreAuthorize)
+                        .requestMatchers(HttpMethod.GET, "/api/profissionais/me").hasRole(Role.PROFISSIONAL.name()) // Exemplo de endpoint "/me"
+                        .requestMatchers(HttpMethod.PUT, "/api/profissionais/me").hasRole(Role.PROFISSIONAL.name())
+                        // GET/Confirmar/Cancelar próprios agendamentos (precisará de @PreAuthorize)
+                        .requestMatchers(HttpMethod.GET, "/api/agendamentos/profissional/**").hasRole(Role.PROFISSIONAL.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/confirmar").hasRole(Role.PROFISSIONAL.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole(Role.PROFISSIONAL.name()) // Profissional também pode cancelar
 
-                        // LISTAGEM DE PROFISSIONAIS: exato e com paginação
-                        .requestMatchers(HttpMethod.GET,
-                                "/api/profissionais",        // cobre GET /api/profissionais
-                                "/api/profissionais/**"      // cobre GET /api/profissionais/{id} e qualquer subpath
-                        ).hasRole("PROFISSIONAL")
+                        // 4. Endpoints específicos para DONO_SALAO (Muitos exigirão @PreAuthorize para checar posse)
+                        .requestMatchers(HttpMethod.POST, "/api/saloes").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/saloes/**").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/saloes/**").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.POST, "/api/saloes/{salaoId}/profissionais").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/profissionais/**").hasRole(Role.DONO_SALAO.name()) // Dono pode atualizar profissional do seu salão
+                        .requestMatchers(HttpMethod.DELETE, "/api/profissionais/**").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.POST, "/api/profissionais/{profId}/servicos").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.POST, "/api/servicos").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/servicos/**").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.DELETE, "/api/servicos/**").hasRole(Role.DONO_SALAO.name())
+                        // Dono pode confirmar/cancelar agendamentos do seu salão (precisará de @PreAuthorize)
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/confirmar").hasRole(Role.DONO_SALAO.name())
+                        .requestMatchers(HttpMethod.PUT, "/api/agendamentos/{id}/cancelar").hasRole(Role.DONO_SALAO.name())
 
-                        // libera GET público:
-                        .requestMatchers(HttpMethod.GET, "/api/servicos/**").permitAll()
-                        // cria, atualiza, deleta só para dono do salão
-                        .requestMatchers(HttpMethod.POST,   "/api/servicos").hasRole("DONO_SALAO")
-                        .requestMatchers(HttpMethod.PUT,    "/api/servicos/**").hasRole("DONO_SALAO")
-                        .requestMatchers(HttpMethod.DELETE, "/api/servicos/**").hasRole("DONO_SALAO")
+                        // 5. Endpoints específicos para ADMIN (Ou acesso total via @PreAuthorize)
+                        // Exemplo: Permitir que ADMIN gerencie usuários
+                        .requestMatchers("/api/usuarios/**").hasRole(Role.ADMIN.name())
+                        // Exemplo: Permitir que ADMIN veja todos os agendamentos
+                        .requestMatchers(HttpMethod.GET, "/api/agendamentos").hasRole(Role.ADMIN.name())
 
-                        // 5) Todo o resto precisa estar autenticado
+                        // 6. Qualquer outra requisição precisa estar autenticada
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
@@ -74,3 +87,4 @@ public class SecurityConfig {
         return http.build();
     }
 }
+

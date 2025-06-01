@@ -1,6 +1,7 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.SalaoDTO;
+import com.organizo.organizobackend.exception.BusinessException;
 import com.organizo.organizobackend.exception.ResourceNotFoundException;
 import com.organizo.organizobackend.mapper.SalaoMapper;
 import com.organizo.organizobackend.model.Salao;
@@ -13,11 +14,15 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
  * Implementação da camada de serviço para Salão.
+ * Garante que o dono do salão seja o usuário logado na criação.
  * Utiliza exceções customizadas para tratamento de erros.
  */
 @Service
@@ -41,6 +46,7 @@ public class SalaoServiceImpl implements SalaoService {
      * Cache: 'saloes' -> página + tamanho + ordenação.
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<SalaoDTO> listar(Pageable pageable) {
         return salaoRepo.findAll(pageable)
                 .map(mapper::toDto);
@@ -52,76 +58,75 @@ public class SalaoServiceImpl implements SalaoService {
      */
     @Override
     @Cacheable(value = "saloes", key = "#id")
+    @Transactional(readOnly = true)
     public SalaoDTO buscarPorId(Long id) {
         Salao salao = salaoRepo.findById(id)
-                // Lança exceção específica se não encontrar
                 .orElseThrow(() -> new ResourceNotFoundException("Salão", "ID", id));
         return mapper.toDto(salao);
     }
 
     /**
-     * Cria novo salão e limpa cache de listagem.
+     * Cria novo salão, definindo o usuário logado como proprietário.
+     * Limpa cache de listagem.
      */
     @Override
     @CacheEvict(value = "saloes", allEntries = true)
+    @Transactional // Garante atomicidade
     public SalaoDTO criar(SalaoDTO dto) {
-        // 1) verificamos se existe o usuário (owner) enviado pelo front
-        Usuario owner = usuarioRepo.findById(dto.getOwnerId())
-                // Lança exceção específica se não encontrar
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário (owner)", "ID", dto.getOwnerId()));
+        // 1. Obter o email do usuário logado
+        String ownerEmail = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // 2) convertemos o DTO para entidade (MAPSTRIP ignora owner)
+        // 2. Buscar o usuário (owner) logado no banco
+        Usuario owner = usuarioRepo.findByEmail(ownerEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário logado não encontrado no banco de dados: " + ownerEmail));
+
+        // 3. Converter DTO para entidade (MapStruct ignora owner e id)
         Salao salaEntity = mapper.toEntity(dto);
 
-        // 3) fazemos o vínculo explícito
+        // 4. Definir o proprietário como o usuário logado (IGNORA o ownerId do DTO)
         salaEntity.setOwner(owner);
+        // A linha salaEntity.setId(null); foi REMOVIDA pois era desnecessária e causava erro.
 
-        // 4) salvamos e retornamos como DTO
+        // 5. Salvar e retornar como DTO
         Salao saved = salaoRepo.save(salaEntity);
         return mapper.toDto(saved);
     }
 
     /**
-     * Atualiza um salão e limpa cache.
+     * Atualiza um salão. A verificação de posse é feita via @PreAuthorize no Controller.
+     * Limpa cache.
      */
     @Override
-    @CacheEvict(value = {"saloes", "saloes::#id"}, allEntries = false) // Limpa cache geral e específico do ID
+    @CacheEvict(value = {"saloes", "saloes::#id"}, allEntries = false)
+    @Transactional
     public SalaoDTO atualizar(Long id, SalaoDTO dto) {
-        // buscamos o salão já existente
+        // A checagem se o usuário logado é o dono (ou ADMIN) é feita no Controller com @PreAuthorize
         Salao existente = salaoRepo.findById(id)
-                // Lança exceção específica se não encontrar
                 .orElseThrow(() -> new ResourceNotFoundException("Salão", "ID", id));
 
-        // atualizamos campos simples
+        // Atualiza campos simples (não permite trocar owner aqui)
         existente.setNome(dto.getNome());
         existente.setCnpj(dto.getCnpj());
         existente.setEndereco(dto.getEndereco());
         existente.setTelefone(dto.getTelefone());
-
-        // (opcional) permitir trocar owner? Geralmente não trocamos, mas se quiser:
-        if (dto.getOwnerId() != null && !dto.getOwnerId().equals(existente.getOwner().getId())) {
-            Usuario novoOwner = usuarioRepo.findById(dto.getOwnerId())
-                    // Lança exceção específica se não encontrar
-                    .orElseThrow(() -> new ResourceNotFoundException("Usuário (novo owner)", "ID", dto.getOwnerId()));
-            existente.setOwner(novoOwner);
-        }
 
         Salao saved = salaoRepo.save(existente);
         return mapper.toDto(saved);
     }
 
     /**
-     * Deleta um salão e limpa cache.
+     * Deleta um salão. A verificação de posse é feita via @PreAuthorize no Controller.
+     * Limpa cache.
      */
     @Override
-    @CacheEvict(value = {"saloes", "saloes::#id"}, allEntries = false) // Limpa cache geral e específico do ID
+    @CacheEvict(value = {"saloes", "saloes::#id"}, allEntries = false)
+    @Transactional
     public void deletar(Long id) {
-        // Verifica se o salão existe antes de tentar deletar
+        // A checagem se o usuário logado é o dono (ou ADMIN) é feita no Controller com @PreAuthorize
         if (!salaoRepo.existsById(id)) {
             throw new ResourceNotFoundException("Salão", "ID", id);
         }
         salaoRepo.deleteById(id);
     }
-
-    // O método toDTO privado foi removido pois o MapStruct está configurado para fazer a conversão.
 }
+
