@@ -1,20 +1,5 @@
-.input-group {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 1rem;
-}
-.input-group label {
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-}
-.input-group__field {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-}
-.input-group__field:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
-}
+/* Estilos específicos para grupos de input, se necessário, além dos globais em index.css */
+/* Exemplo: .input-group--special-validation { ... } */
+/* No momento, as classes globais em index.css (.form__group, .form__label, .form__input) parecem suficientes. */
+/* As classes .input-group, .input-group label, .input-group__field podem ser mapeadas para as classes .form__* */
+

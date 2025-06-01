@@ -20,10 +20,8 @@
   --color-muted:     #616161; /* texto secundário */
 
   /* Branding - Nomes padronizados e originais para compatibilidade */
-  --color-primary:   #F2E6DA; /* cor principal - mesma que organizo */
-  --color-secondary: #D7C4C1; /* cor secundária - mesma que calendar */
-  --color-organizo:  #F2E6DA; /* texto/logo "Organizô" (mantido para compatibilidade) */
-  --color-calendar:  #D7C4C1; /* fundo do calendário (mantido para compatibilidade) */
+  --color-primary:   #F2E6DA; /* cor principal */
+  --color-secondary: #D7C4C1; /* cor secundária */
 
   /* Estados */
   --color-success:   #2E7D32;
