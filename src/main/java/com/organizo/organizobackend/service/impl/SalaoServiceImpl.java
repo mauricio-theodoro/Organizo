@@ -1,6 +1,7 @@
 package com.organizo.organizobackend.service.impl;
 
 import com.organizo.organizobackend.dto.SalaoDTO;
+import com.organizo.organizobackend.exception.ResourceNotFoundException;
 import com.organizo.organizobackend.mapper.SalaoMapper;
 import com.organizo.organizobackend.model.Salao;
 import com.organizo.organizobackend.model.Usuario;
@@ -16,8 +17,8 @@ import org.springframework.stereotype.Service;
 
 
 /**
- * Implementação da camada de serviço para Salão,
- * agora tratando o campo CNPJ.
+ * Implementação da camada de serviço para Salão.
+ * Utiliza exceções customizadas para tratamento de erros.
  */
 @Service
 public class SalaoServiceImpl implements SalaoService {
@@ -53,7 +54,8 @@ public class SalaoServiceImpl implements SalaoService {
     @Cacheable(value = "saloes", key = "#id")
     public SalaoDTO buscarPorId(Long id) {
         Salao salao = salaoRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + id));
+                // Lança exceção específica se não encontrar
+                .orElseThrow(() -> new ResourceNotFoundException("Salão", "ID", id));
         return mapper.toDto(salao);
     }
 
@@ -65,7 +67,8 @@ public class SalaoServiceImpl implements SalaoService {
     public SalaoDTO criar(SalaoDTO dto) {
         // 1) verificamos se existe o usuário (owner) enviado pelo front
         Usuario owner = usuarioRepo.findById(dto.getOwnerId())
-                .orElseThrow(() -> new RuntimeException("Usuário (owner) não encontrado: " + dto.getOwnerId()));
+                // Lança exceção específica se não encontrar
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário (owner)", "ID", dto.getOwnerId()));
 
         // 2) convertemos o DTO para entidade (MAPSTRIP ignora owner)
         Salao salaEntity = mapper.toEntity(dto);
@@ -79,19 +82,15 @@ public class SalaoServiceImpl implements SalaoService {
     }
 
     /**
-     * Deleta um salão e limpa cache.
+     * Atualiza um salão e limpa cache.
      */
     @Override
-    @CacheEvict(value = "saloes", allEntries = true)
-    public void deletar(Long id) {
-        salaoRepo.deleteById(id);
-    }
-
-    @Override
+    @CacheEvict(value = {"saloes", "saloes::#id"}, allEntries = false) // Limpa cache geral e específico do ID
     public SalaoDTO atualizar(Long id, SalaoDTO dto) {
         // buscamos o salão já existente
         Salao existente = salaoRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Salão não encontrado: " + id));
+                // Lança exceção específica se não encontrar
+                .orElseThrow(() -> new ResourceNotFoundException("Salão", "ID", id));
 
         // atualizamos campos simples
         existente.setNome(dto.getNome());
@@ -102,7 +101,8 @@ public class SalaoServiceImpl implements SalaoService {
         // (opcional) permitir trocar owner? Geralmente não trocamos, mas se quiser:
         if (dto.getOwnerId() != null && !dto.getOwnerId().equals(existente.getOwner().getId())) {
             Usuario novoOwner = usuarioRepo.findById(dto.getOwnerId())
-                    .orElseThrow(() -> new RuntimeException("Usuário (novo owner) não encontrado: " + dto.getOwnerId()));
+                    // Lança exceção específica se não encontrar
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuário (novo owner)", "ID", dto.getOwnerId()));
             existente.setOwner(novoOwner);
         }
 
@@ -110,20 +110,18 @@ public class SalaoServiceImpl implements SalaoService {
         return mapper.toDto(saved);
     }
 
-
-
     /**
-     * Converte entidade Salao em DTO, incluindo CNPJ.
+     * Deleta um salão e limpa cache.
      */
-    private SalaoDTO toDTO(Salao salao) {
-        SalaoDTO dto = new SalaoDTO();
-        dto.setId(salao.getId());
-        dto.setNome(salao.getNome());
-        dto.setCnpj(salao.getCnpj());
-        dto.setEndereco(salao.getEndereco());
-        dto.setTelefone(salao.getTelefone());
-        dto.setCriadoEm(salao.getCriadoEm());
-        dto.setAtualizadoEm(salao.getAtualizadoEm());
-        return dto;
+    @Override
+    @CacheEvict(value = {"saloes", "saloes::#id"}, allEntries = false) // Limpa cache geral e específico do ID
+    public void deletar(Long id) {
+        // Verifica se o salão existe antes de tentar deletar
+        if (!salaoRepo.existsById(id)) {
+            throw new ResourceNotFoundException("Salão", "ID", id);
+        }
+        salaoRepo.deleteById(id);
     }
+
+    // O método toDTO privado foi removido pois o MapStruct está configurado para fazer a conversão.
 }
