@@ -1,35 +1,32 @@
 package com.organizo.organizobackend.exception;
 
-/**
- * Resposta para erros genéricos.
- */
-public class ErrorResponse {
-    private int status;
-    private String message;
-    private long timestamp;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
-    public ErrorResponse(int status, String message, long timestamp) {
-        this.status = status;
-        this.message = message;
+import java.time.LocalDateTime;
+import java.util.Map;
+
+/**
+ * DTO padrão para respostas de erro da API.
+ */
+@Getter
+@Setter
+@AllArgsConstructor
+public class ErrorResponse {
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
+    private Map<String, String> validationErrors; // Opcional, para erros de validação
+
+    public ErrorResponse(LocalDateTime timestamp, int status, String error, String message, String path) {
         this.timestamp = timestamp;
-    }
-    // getters e setters
-    public int getStatus() {
-        return status;
-    }
-    public void setStatus(int status) {
         this.status = status;
-    }
-    public String getMessage() {
-        return message;
-    }
-    public void setMessage(String message) {
+        this.error = error;
         this.message = message;
-    }
-    public long getTimestamp() {
-        return timestamp;
-    }
-    public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+        this.path = path;
+        this.validationErrors = null;
     }
 }
