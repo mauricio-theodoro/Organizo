@@ -1,11 +1,7 @@
 package com.organizo.organizobackend.service;
 
-import com.organizo.organizobackend.model.Profissional;
-import com.organizo.organizobackend.model.Salao;
-import com.organizo.organizobackend.model.Usuario;
-import com.organizo.organizobackend.repository.ProfissionalRepository;
-import com.organizo.organizobackend.repository.SalaoRepository;
-import com.organizo.organizobackend.repository.UsuarioRepository;
+import com.organizo.organizobackend.model.*;
+import com.organizo.organizobackend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,71 +12,87 @@ import java.util.Optional;
  * Serviço auxiliar para verificações de segurança,
  * especificamente para checar a posse de recursos.
  * Usado em expressões @PreAuthorize.
+ * Renomeado implicitamente para "securityCheckService" para refletir escopo maior.
  */
-@Service("salaoSecurityService") // Nome do bean para ser referenciado no @PreAuthorize
-public class SalaoSecurityService {
+@Service("agendamentoSecurityService") // Nome do bean para @PreAuthorize (mantido por compatibilidade, mas poderia ser renomeado)
+public class SalaoSecurityService { // TODO: Renomear classe para SecurityCheckService ou similar
 
-    @Autowired
-    private SalaoRepository salaoRepository;
+    @Autowired private SalaoRepository salaoRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private ProfissionalRepository profissionalRepository;
+    @Autowired private ClienteRepository clienteRepository;
+    @Autowired private AgendamentoRepository agendamentoRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    // --- Verificações de Posse de Salão --- //
 
-    @Autowired
-    private ProfissionalRepository profissionalRepository;
-
-    /**
-     * Verifica se o usuário logado (identificado pelo username/email)
-     * é o proprietário (owner) do salão especificado.
-     *
-     * @param salaoId ID do salão a ser verificado.
-     * @param username Email do usuário logado (obtido via principal.username).
-     * @return true se o usuário for o dono do salão, false caso contrário.
-     */
     @Transactional(readOnly = true)
     public boolean isOwner(Long salaoId, String username) {
         Optional<Usuario> usuarioOpt = usuarioRepository.findByEmail(username);
-        if (usuarioOpt.isEmpty()) {
-            return false;
-        }
+        if (usuarioOpt.isEmpty()) return false;
         Usuario usuarioLogado = usuarioOpt.get();
 
         Optional<Salao> salaoOpt = salaoRepository.findById(salaoId);
-        if (salaoOpt.isEmpty()) {
-            return false;
-        }
+        if (salaoOpt.isEmpty()) return false;
         Salao salao = salaoOpt.get();
 
         return salao.getOwner() != null && salao.getOwner().getId().equals(usuarioLogado.getId());
     }
 
-    /**
-     * Verifica se o usuário logado (identificado pelo username/email)
-     * é o proprietário (owner) do salão onde o profissional especificado trabalha.
-     *
-     * @param profissionalId ID do profissional a ser verificado.
-     * @param username Email do usuário logado.
-     * @return true se o usuário for o dono do salão do profissional, false caso contrário.
-     */
     @Transactional(readOnly = true)
     public boolean isOwnerOfSalaoContainingProfissional(Long profissionalId, String username) {
-        // Busca o profissional
         Optional<Profissional> profissionalOpt = profissionalRepository.findById(profissionalId);
-        if (profissionalOpt.isEmpty()) {
-            return false; // Profissional não existe
-        }
+        if (profissionalOpt.isEmpty()) return false;
         Profissional profissional = profissionalOpt.get();
 
-        // Verifica se o profissional está vinculado a um salão
-        if (profissional.getSalao() == null || profissional.getSalao().getId() == null) {
-            return false; // Profissional não pertence a nenhum salão
-        }
+        if (profissional.getSalao() == null || profissional.getSalao().getId() == null) return false;
 
-        // Reutiliza a lógica de isOwner para o salão do profissional
         return isOwner(profissional.getSalao().getId(), username);
     }
 
-    // TODO: Adicionar método isOwnerOfSalaoContainingAgendamento(Long agendamentoId, String username)
-    // para proteger endpoints de agendamento que o DONO_SALAO pode acessar.
+    // --- Verificações de Posse de Cliente/Profissional (baseado no email) --- //
+
+    @Transactional(readOnly = true)
+    public boolean isClienteOwner(Long clienteId, String username) {
+        Optional<Cliente> clienteOpt = clienteRepository.findById(clienteId);
+        // Compara o email do usuário logado (username) com o email do cliente encontrado
+        return clienteOpt.isPresent() && clienteOpt.get().getEmail().equalsIgnoreCase(username);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isProfissionalOwner(Long profissionalId, String username) {
+        Optional<Profissional> profissionalOpt = profissionalRepository.findById(profissionalId);
+        // Compara o email do usuário logado (username) com o email do profissional encontrado
+        return profissionalOpt.isPresent() && profissionalOpt.get().getEmail().equalsIgnoreCase(username);
+    }
+
+    // --- Verificações de Relação com Agendamento --- //
+
+    @Transactional(readOnly = true)
+    public boolean isClienteOfAgendamento(Long agendamentoId, String username) {
+        Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(agendamentoId);
+        if (agendamentoOpt.isEmpty() || agendamentoOpt.get().getCliente() == null) return false;
+        // Compara o email do usuário logado com o email do cliente do agendamento
+        return agendamentoOpt.get().getCliente().getEmail().equalsIgnoreCase(username);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isProfissionalOfAgendamento(Long agendamentoId, String username) {
+        Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(agendamentoId);
+        if (agendamentoOpt.isEmpty() || agendamentoOpt.get().getProfissional() == null) return false;
+        // Compara o email do usuário logado com o email do profissional do agendamento
+        return agendamentoOpt.get().getProfissional().getEmail().equalsIgnoreCase(username);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isOwnerOfSalaoContainingAgendamento(Long agendamentoId, String username) {
+        Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(agendamentoId);
+        if (agendamentoOpt.isEmpty() || agendamentoOpt.get().getProfissional() == null) return false;
+
+        Profissional profissional = agendamentoOpt.get().getProfissional();
+        if (profissional.getSalao() == null || profissional.getSalao().getId() == null) return false;
+
+        // Reutiliza a lógica de isOwner para o salão do profissional do agendamento
+        return isOwner(profissional.getSalao().getId(), username);
+    }
 }
 

@@ -14,12 +14,16 @@ import com.organizo.organizobackend.repository.ProfissionalRepository;
 import com.organizo.organizobackend.repository.ServicoRepository;
 import com.organizo.organizobackend.service.AgendamentoService;
 import com.organizo.organizobackend.service.EmailService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Implementação da lógica de negócio para Agendamento,
@@ -28,27 +32,25 @@ import java.time.LocalDateTime;
 @Service
 public class AgendamentoServiceImpl implements AgendamentoService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AgendamentoServiceImpl.class);
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy 'às' HH:mm");
+
     @Autowired private AgendamentoRepository agRepo;
     @Autowired private ClienteRepository clienteRepo;
     @Autowired private ProfissionalRepository profRepo;
     @Autowired private ServicoRepository servRepo;
     @Autowired private EmailService emailService;
 
-    /**
-     * Retorna página de todos os agendamentos.
-     */
     @Override
+    @Transactional(readOnly = true)
     public Page<AgendamentoDTO> listar(Pageable pageable) {
         return agRepo.findAll(pageable)
                 .map(this::toDTO);
     }
 
-    /**
-     * Retorna página de agendamentos filtrados por cliente.
-     */
     @Override
+    @Transactional(readOnly = true)
     public Page<AgendamentoDTO> listarPorCliente(Long clienteId, Pageable pageable) {
-        // Verifica se o cliente existe
         if (!clienteRepo.existsById(clienteId)) {
             throw new ResourceNotFoundException("Cliente", "ID", clienteId);
         }
@@ -56,12 +58,9 @@ public class AgendamentoServiceImpl implements AgendamentoService {
                 .map(this::toDTO);
     }
 
-    /**
-     * Retorna página de agendamentos filtrados por profissional.
-     */
     @Override
+    @Transactional(readOnly = true)
     public Page<AgendamentoDTO> listarPorProfissional(Long profissionalId, Pageable pageable) {
-        // Verifica se o profissional existe
         if (!profRepo.existsById(profissionalId)) {
             throw new ResourceNotFoundException("Profissional", "ID", profissionalId);
         }
@@ -70,13 +69,12 @@ public class AgendamentoServiceImpl implements AgendamentoService {
     }
 
     @Override
+    @Transactional
     public AgendamentoDTO criar(AgendamentoDTO dto) {
-        // Valida se a data/hora do agendamento é futura
         if (dto.getDataHoraAgendada() == null || dto.getDataHoraAgendada().isBefore(LocalDateTime.now())) {
             throw new BusinessException("A data e hora do agendamento devem ser futuras.");
         }
 
-        // Busca entidades relacionadas, lançando exceção específica se não encontradas
         Cliente cliente = clienteRepo.findById(dto.getClienteId())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente", "ID", dto.getClienteId()));
         Profissional prof = profRepo.findById(dto.getProfissionalId())
@@ -85,48 +83,43 @@ public class AgendamentoServiceImpl implements AgendamentoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Serviço", "ID", dto.getServicoId()));
 
         // TODO: Adicionar validação de conflito de horário para o profissional
-        // (Ex: verificar se já existe agendamento para o mesmo profissional no mesmo horário)
 
         Agendamento ag = new Agendamento();
         ag.setCliente(cliente);
         ag.setProfissional(prof);
         ag.setServico(serv);
         ag.setDataHoraAgendada(dto.getDataHoraAgendada());
-        ag.setStatus(StatusAgendamento.PENDENTE); // Status inicial
+        ag.setStatus(StatusAgendamento.PENDENTE);
 
         Agendamento salvo = agRepo.save(ag);
 
-        // Envio de e‑mail ao cliente e profissional (considerar tornar assíncrono)
-        try {
-            emailService.sendSimpleMessage(
-                    cliente.getEmail(),
-                    "Organizo - Agendamento Criado",
-                    String.format("Olá %s, seu agendamento para '%s' com %s no dia %s às %s foi criado com sucesso e está pendente de confirmação.",
-                            cliente.getNome(), serv.getNome(), prof.getNome(),
-                            ag.getDataHoraAgendada().toLocalDate(), ag.getDataHoraAgendada().toLocalTime())
-            );
-            emailService.sendSimpleMessage(
-                    prof.getEmail(),
-                    "Organizo - Novo Agendamento Recebido",
-                    String.format("Olá %s, você recebeu um novo agendamento de %s para o serviço '%s' no dia %s às %s.",
-                            prof.getNome(), cliente.getNome(), serv.getNome(),
-                            ag.getDataHoraAgendada().toLocalDate(), ag.getDataHoraAgendada().toLocalTime())
-            );
-        } catch (Exception e) {
-            // Logar erro de envio de email, mas não impedir a criação do agendamento
-            // logger.error("Falha ao enviar email de confirmação para agendamento {}: {}", salvo.getId(), e.getMessage());
-        }
+        // Envio de e‑mail ao cliente e profissional
+        sendEmail(
+                cliente.getEmail(),
+                "Organizo - Agendamento Criado (Pendente)",
+                String.format("Olá %s,\n\nSeu agendamento para '%s' com %s em %s foi criado com sucesso.\nStatus atual: PENDENTE.\n\nAtenciosamente,\nEquipe Organizo",
+                        cliente.getNome(), serv.getNome(), prof.getNome(),
+                        salvo.getDataHoraAgendada().format(formatter)),
+                salvo.getId()
+        );
+        sendEmail(
+                prof.getEmail(),
+                "Organizo - Novo Agendamento Recebido",
+                String.format("Olá %s,\n\nVocê recebeu um novo agendamento de %s para o serviço '%s' em %s.\nStatus: PENDENTE.\n\nAtenciosamente,\nEquipe Organizo",
+                        prof.getNome(), cliente.getNome(), serv.getNome(),
+                        salvo.getDataHoraAgendada().format(formatter)),
+                salvo.getId()
+        );
 
         return toDTO(salvo);
     }
 
     @Override
+    @Transactional
     public AgendamentoDTO confirmar(Long id) {
         Agendamento ag = agRepo.findById(id)
-                // Lança exceção específica se não encontrar
                 .orElseThrow(() -> new ResourceNotFoundException("Agendamento", "ID", id));
 
-        // Validação de regra de negócio: só pode confirmar se estiver PENDENTE
         if (ag.getStatus() != StatusAgendamento.PENDENTE) {
             throw new BusinessException("Agendamento não pode ser confirmado pois não está com status PENDENTE (Status atual: " + ag.getStatus() + ")");
         }
@@ -134,18 +127,37 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         ag.setStatus(StatusAgendamento.CONFIRMADO);
         Agendamento salvo = agRepo.save(ag);
 
-        // TODO: Enviar email de confirmação
+        // Enviar email de confirmação
+        Cliente cliente = salvo.getCliente();
+        Profissional prof = salvo.getProfissional();
+        Servico serv = salvo.getServico();
+
+        sendEmail(
+                cliente.getEmail(),
+                "Organizo - Agendamento Confirmado!",
+                String.format("Olá %s,\n\nBoas notícias! Seu agendamento para '%s' com %s em %s foi CONFIRMADO.\n\nEsperamos você!\nEquipe Organizo",
+                        cliente.getNome(), serv.getNome(), prof.getNome(),
+                        salvo.getDataHoraAgendada().format(formatter)),
+                salvo.getId()
+        );
+        sendEmail(
+                prof.getEmail(),
+                "Organizo - Agendamento Confirmado",
+                String.format("Olá %s,\n\nO agendamento de %s para o serviço '%s' em %s foi CONFIRMADO.\n\nAtenciosamente,\nEquipe Organizo",
+                        prof.getNome(), cliente.getNome(), serv.getNome(),
+                        salvo.getDataHoraAgendada().format(formatter)),
+                salvo.getId()
+        );
 
         return toDTO(salvo);
     }
 
     @Override
+    @Transactional
     public AgendamentoDTO cancelar(Long id) {
         Agendamento ag = agRepo.findById(id)
-                // Lança exceção específica se não encontrar
                 .orElseThrow(() -> new ResourceNotFoundException("Agendamento", "ID", id));
 
-        // Validação de regra de negócio: só pode cancelar se estiver PENDENTE ou CONFIRMADO
         if (ag.getStatus() == StatusAgendamento.CANCELADO || ag.getStatus() == StatusAgendamento.CONCLUIDO) {
             throw new BusinessException("Agendamento não pode ser cancelado pois seu status é " + ag.getStatus());
         }
@@ -155,9 +167,42 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         ag.setStatus(StatusAgendamento.CANCELADO);
         Agendamento salvo = agRepo.save(ag);
 
-        // TODO: Enviar email de cancelamento para cliente e profissional
+        // Enviar email de cancelamento
+        Cliente cliente = salvo.getCliente();
+        Profissional prof = salvo.getProfissional();
+        Servico serv = salvo.getServico();
+
+        sendEmail(
+                cliente.getEmail(),
+                "Organizo - Agendamento Cancelado",
+                String.format("Olá %s,\n\nInformamos que o seu agendamento para '%s' com %s em %s foi CANCELADO.\n\nSe precisar reagendar, entre em contato ou utilize nosso app.\nEquipe Organizo",
+                        cliente.getNome(), serv.getNome(), prof.getNome(),
+                        salvo.getDataHoraAgendada().format(formatter)),
+                salvo.getId()
+        );
+        sendEmail(
+                prof.getEmail(),
+                "Organizo - Agendamento Cancelado",
+                String.format("Olá %s,\n\nO agendamento de %s para o serviço '%s' em %s foi CANCELADO.\n\nAtenciosamente,\nEquipe Organizo",
+                        prof.getNome(), cliente.getNome(), serv.getNome(),
+                        salvo.getDataHoraAgendada().format(formatter)),
+                salvo.getId()
+        );
 
         return toDTO(salvo);
+    }
+
+    /**
+     * Método auxiliar para enviar e-mail e logar erros.
+     */
+    private void sendEmail(String to, String subject, String text, Long agendamentoId) {
+        try {
+            emailService.sendSimpleMessage(to, subject, text);
+            logger.info("Email enviado para {} sobre agendamento {}", to, agendamentoId);
+        } catch (Exception e) {
+            logger.error("Falha ao enviar email para {} sobre agendamento {}: {}", to, agendamentoId, e.getMessage(), e);
+            // Não relançar a exceção para não impedir a operação principal
+        }
     }
 
     /**
@@ -171,10 +216,10 @@ public class AgendamentoServiceImpl implements AgendamentoService {
         dto.setServicoId(ag.getServico().getId());
         dto.setDataHoraAgendada(ag.getDataHoraAgendada());
         dto.setStatus(ag.getStatus());
-        // Adicionar nomes para facilitar o frontend (opcional)
         dto.setNomeCliente(ag.getCliente().getNome());
         dto.setNomeProfissional(ag.getProfissional().getNome());
         dto.setNomeServico(ag.getServico().getNome());
         return dto;
     }
 }
+
