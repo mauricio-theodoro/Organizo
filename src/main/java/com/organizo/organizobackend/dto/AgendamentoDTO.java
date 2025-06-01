@@ -9,11 +9,12 @@ import java.time.LocalDateTime;
 
 /**
  * DTO para transferência de dados de Agendamento.
+ * Inclui nomes de cliente, profissional e serviço para conveniência do frontend.
  */
 @Schema(name = "Agendamento", description = "Dados de um agendamento de serviço")
 public class AgendamentoDTO {
 
-    @Schema(description = "ID do cliente", example = "1")
+    @Schema(description = "ID do agendamento", example = "10")
     private Long id;
 
     @Schema(description = "ID do cliente", example = "5", required = true)
@@ -36,6 +37,16 @@ public class AgendamentoDTO {
 
     @Schema(description = "Status do agendamento", example = "PENDENTE")
     private StatusAgendamento status;
+
+    // Campos adicionados para facilitar exibição no frontend
+    @Schema(description = "Nome do cliente", example = "Maria Silva", accessMode = Schema.AccessMode.READ_ONLY)
+    private String nomeCliente;
+
+    @Schema(description = "Nome do profissional", example = "João Pereira", accessMode = Schema.AccessMode.READ_ONLY)
+    private String nomeProfissional;
+
+    @Schema(description = "Nome do serviço", example = "Corte de Cabelo", accessMode = Schema.AccessMode.READ_ONLY)
+    private String nomeServico;
 
     // Getters e Setters
     public Long getId() {
@@ -79,4 +90,26 @@ public class AgendamentoDTO {
     public void setStatus(StatusAgendamento status) {
         this.status = status;
     }
+
+    public String getNomeCliente() {
+        return nomeCliente;
+    }
+    public void setNomeCliente(String nomeCliente) {
+        this.nomeCliente = nomeCliente;
+    }
+
+    public String getNomeProfissional() {
+        return nomeProfissional;
+    }
+    public void setNomeProfissional(String nomeProfissional) {
+        this.nomeProfissional = nomeProfissional;
+    }
+
+    public String getNomeServico() {
+        return nomeServico;
+    }
+    public void setNomeServico(String nomeServico) {
+        this.nomeServico = nomeServico;
+    }
 }
+
