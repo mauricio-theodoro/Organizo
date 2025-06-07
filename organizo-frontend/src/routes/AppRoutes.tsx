@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
 
 // Dashboards por perfil
@@ -20,111 +20,168 @@ import Login from '../pages/Login';
 import Layout from '../components/Layout'; // Layout compartilhado
 
 /**
- * Componente principal de roteamento da aplicação.
- * Define rotas públicas e privadas, controlando o acesso baseado no token e no perfil (role) do usuário.
- * Garante que as rotas só sejam renderizadas após o carregamento inicial do AuthContext.
+ * Componente de proteção para rotas privadas.
+ * Verifica se o usuário está autenticado antes de renderizar a rota.
  */
-export default function AppRoutes() {
-  // Obtém o estado de autenticação do contexto
-  const { token, role, loading } = useContext(AuthContext);
+const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token, loading } = useContext(AuthContext);
 
-  /**
-   * Função auxiliar para determinar o path do dashboard padrão baseado no perfil do usuário.
-   * Usada para redirecionamentos.
-   */
-  const getDefaultDashboardPath = (userRole: string | null | undefined): string => {
-    switch (userRole) {
-      case 'CLIENTE': return '/dashboard/cliente';
-      case 'PROFISSIONAL': return '/dashboard/profissional';
-      case 'DONO_SALAO': return '/dashboard/owner';
-      case 'ADMIN': return '/dashboard/admin';
-      default: return '/'; // Fallback para landing page
-    }
-  };
+  if (loading) return <p>Carregando...</p>;
 
-  // Exibe um indicador de carregamento global enquanto o AuthContext verifica o estado inicial
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        {/* Idealmente, usar um componente Spinner aqui */}
-        <p className="text-lg text-muted">Carregando aplicação...</p>
-      </div>
-    );
+  // Se não houver token, redireciona para login
+  if (!token) return <Navigate to="/login" replace />;
+
+  // Se houver token, renderiza o conteúdo da rota
+  return <>{children}</>;
+};
+
+/**
+ * Componente de proteção para rotas específicas de perfil.
+ * Verifica se o usuário tem o perfil necessário para acessar a rota.
+ */
+const RoleRoute = ({
+  allowedRole,
+  children
+}: {
+  allowedRole: 'CLIENTE' | 'PROFISSIONAL' | 'DONO_SALAO' | 'ADMIN';
+  children: React.ReactNode
+}) => {
+  const { role, loading } = useContext(AuthContext);
+
+  if (loading) return <p>Carregando...</p>;
+
+  // Se o perfil não corresponder ao permitido, redireciona para o dashboard padrão
+  if (role !== allowedRole) {
+    return <Navigate to={getDefaultDashboardPath(role)} replace />;
   }
 
-  // Após o carregamento, renderiza as rotas apropriadas baseado na existência do token
+  // Se o perfil corresponder, renderiza o conteúdo da rota
+  return <>{children}</>;
+};
+
+/**
+ * Função auxiliar para determinar o path do dashboard padrão baseado no perfil do usuário.
+ * @param userRole O perfil (role) do usuário atual.
+ * @returns O path do dashboard correspondente ou '/login' como fallback.
+ */
+const getDefaultDashboardPath = (userRole: string | null | undefined): string => {
+  switch (userRole) {
+    case 'CLIENTE':
+      return '/dashboard/cliente';
+    case 'PROFISSIONAL':
+      return '/dashboard/profissional';
+    case 'DONO_SALAO':
+      return '/dashboard/owner';
+    case 'ADMIN':
+      return '/dashboard/admin';
+    default:
+      return '/login'; // Fallback para login se não houver role válida
+  }
+};
+
+/**
+ * Componente principal de roteamento da aplicação.
+ * Define rotas públicas e privadas, controlando o acesso baseado no token e no perfil do usuário.
+ */
+export default function AppRoutes() {
+  const { loading } = useContext(AuthContext);
+
+  // Exibe mensagem de carregamento enquanto o estado de autenticação é verificado inicialmente
+  if (loading) return <p>Carregando...</p>;
+
   return (
     <Routes>
       {/* ==================================================================
-          GRUPO DE ROTAS PÚBLICAS (Renderizadas apenas se NÃO houver token)
+          ROTAS PÚBLICAS (Acessíveis sem login)
           ================================================================== */}
-      {!token && (
-        <>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          {/* Qualquer outra rota pública não definida redireciona para a Landing Page */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </>
-      )}
+      {/* A Landing Page é sempre acessível, independentemente do estado de autenticação */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* Página de Login - redireciona para o dashboard se já estiver logado */}
+      <Route path="/login" element={<LoginRedirect />} />
+
+      {/* Futura página de Contato */}
+      <Route path="/contato" element={<p>Página de Contato (Em construção)</p>} />
+
+      {/* Futura página de Registro de Cliente */}
+      <Route path="/registro/cliente" element={<p>Página de Registro (Em construção)</p>} />
 
       {/* ==================================================================
-          GRUPO DE ROTAS PRIVADAS (Renderizadas apenas se HOUVER token)
+          ROTAS PRIVADAS (Requerem login/token)
           ================================================================== */}
-      {token && (
-        <>
-          {/* --- Dashboards Principais (Acesso direto por Role) --- */}
-          <Route
-            path="/dashboard/cliente"
-            element={role === 'CLIENTE' ? <ClienteDashboard /> : <Navigate to={getDefaultDashboardPath(role)} replace />}
-          />
-          <Route
-            path="/dashboard/profissional"
-            element={role === 'PROFISSIONAL' ? <ProfissionalDashboard /> : <Navigate to={getDefaultDashboardPath(role)} replace />}
-          />
-          <Route
-            path="/dashboard/owner"
-            element={role === 'DONO_SALAO' ? <OwnerDashboard /> : <Navigate to={getDefaultDashboardPath(role)} replace />}
-          />
-          <Route
-            path="/dashboard/admin"
-            element={role === 'ADMIN' ? <AdminDashboard /> : <Navigate to={getDefaultDashboardPath(role)} replace />}
-          />
+      {/* Dashboard do Cliente */}
+      <Route path="/dashboard/cliente" element={
+        <PrivateRoute>
+          <RoleRoute allowedRole="CLIENTE">
+            <ClienteDashboard />
+          </RoleRoute>
+        </PrivateRoute>
+      } />
 
-          {/* --- Rotas Aninhadas com Layout Compartilhado --- */}
-          {/* TODO: Avaliar se o Admin usará este Layout ou terá um específico */}
-          <Route element={<Layout />}>
-            {/* Rotas específicas do Cliente */}
-            {role === 'CLIENTE' && (
-              <>
-                <Route path="/salons/:salonId/services" element={<ServiceList />} />
-                <Route path="/salons/:salonId/services/:serviceId/professionals" element={<ProfessionalList />} />
-                <Route path="/book/:salonId/:serviceId/:professionalId/calendar" element={<BookingCalendar />} />
-                <Route path="/book/review" element={<BookingReview />} />
-                {/* Outras rotas do cliente aqui */}
-              </>
-            )}
-            {/* Rotas específicas do Profissional */}
-            {role === 'PROFISSIONAL' && (
-              <>
-                {/* Outras rotas do profissional aqui */}
-              </>
-            )}
-            {/* Rotas específicas do Dono do Salão */}
-            {role === 'DONO_SALAO' && (
-              <>
-                {/* Outras rotas do dono aqui */}
-              </>
-            )}
-            {/* Rotas específicas do Admin (se usar Layout) */}
-            {/* {role === 'ADMIN' && (<> </>)} */}
-          </Route>
+      {/* Dashboard do Profissional */}
+      <Route path="/dashboard/profissional" element={
+        <PrivateRoute>
+          <RoleRoute allowedRole="PROFISSIONAL">
+            <ProfissionalDashboard />
+          </RoleRoute>
+        </PrivateRoute>
+      } />
 
-          {/* --- Fallback para Rotas Privadas --- */}
-          {/* Se logado, qualquer rota não encontrada redireciona para o dashboard padrão */}
-          <Route path="*" element={<Navigate to={getDefaultDashboardPath(role)} replace />} />
-        </>
-      )}
+      {/* Dashboard do Dono do Salão */}
+      <Route path="/dashboard/owner" element={
+        <PrivateRoute>
+          <RoleRoute allowedRole="DONO_SALAO">
+            <OwnerDashboard />
+          </RoleRoute>
+        </PrivateRoute>
+      } />
+
+      {/* Dashboard do Admin */}
+      <Route path="/dashboard/admin" element={
+        <PrivateRoute>
+          <RoleRoute allowedRole="ADMIN">
+            <AdminDashboard />
+          </RoleRoute>
+        </PrivateRoute>
+      } />
+
+      {/* Rotas com Layout compartilhado */}
+      <Route element={
+        <PrivateRoute>
+          <Layout>
+            <Outlet />
+          </Layout>
+        </PrivateRoute>
+      }>
+        {/* Rotas do fluxo de agendamento */}
+        <Route path="/salons/:salonId/services" element={<ServiceList />} />
+        <Route path="/salons/:salonId/services/:serviceId/professionals" element={<ProfessionalList />} />
+        <Route path="/book/:salonId/:serviceId/:professionalId/calendar" element={<BookingCalendar />} />
+        <Route path="/book/review" element={<BookingReview />} />
+
+        {/* Outras rotas privadas com layout compartilhado podem ser adicionadas aqui */}
+      </Route>
+
+      {/* Fallback para rotas não encontradas */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
 
+/**
+ * Componente auxiliar para redirecionar da página de login para o dashboard
+ * se o usuário já estiver autenticado.
+ */
+const LoginRedirect = () => {
+  const { token, role, loading } = useContext(AuthContext);
+
+  if (loading) return <p>Carregando...</p>;
+
+  // Se já estiver logado, redireciona para o dashboard correspondente
+  if (token) {
+    return <Navigate to={getDefaultDashboardPath(role)} replace />;
+  }
+
+  // Se não estiver logado, mostra a página de login
+  return <Login />;
+};
