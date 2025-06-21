@@ -7,6 +7,13 @@ spring:
     # agora com fallback para 'organizo_pass'
     password: ${SPRING_DATASOURCE_PASSWORD:organizo_pass}
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/auth
+          jwk-set-uri: http://localhost:8080/auth/.well-known/jwks.json
+
   redis:
     host: ${SPRING_REDIS_HOST:localhost}
     port: ${SPRING_REDIS_PORT:6379}
@@ -33,3 +40,13 @@ spring:
 logging:
   level:
     org.springframework: DEBUG
+
+jwt:
+  secret: ${JWT_SECRET:umaChaveMuitoSecreta1234567890}
+  expiration: 3600000  # 1h em milissegundos
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus

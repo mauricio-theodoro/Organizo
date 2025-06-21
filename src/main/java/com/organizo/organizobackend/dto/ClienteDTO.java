@@ -17,7 +17,7 @@ public class ClienteDTO {
     @Schema(description = "ID do cliente", example = "10")
     private Long id;
 
-    @Schema(description = "Nome do cliente", example = "Maria")
+    @Schema(description = "Nome do cliente", example = "Maria", required = true)
     @NotBlank(message = "nome é obrigatório")
     @Size(max = 50, message = "nome não pode exceder 50 caracteres")
     private String nome;

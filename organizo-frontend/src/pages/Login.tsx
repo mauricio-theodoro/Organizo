@@ -14,7 +14,7 @@ import { Input } from '../components/Input'; // Usar o componente Input estiliza
 export default function Login() {
   const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [senha, setSenha] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false); // Estado para feedback de carregamento no botão
 
@@ -23,7 +23,7 @@ export default function Login() {
     setError(null);
     setLoading(true); // Ativa o loading
     try {
-      await login(email, password);
+      await login(email, senha);
       // O redirecionamento é feito pelo AuthContext após login bem-sucedido
     } catch (err: any) {
       // Define a mensagem de erro vinda da API ou uma genérica
@@ -70,8 +70,8 @@ export default function Login() {
             <Input
               id="password"
               type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
+              value={senha}
+              onChange={e => setSenha(e.target.value)}
               required
               minLength={6}
               placeholder="••••••"
@@ -89,7 +89,7 @@ export default function Login() {
         {/* Link para Registro */}
         <p className="text-center text-sm text-muted mt-lg">
           Não tem uma conta?{' '}
-          <Link to="/registro" className="font-medium text-accent hover:text-accent-hover">
+          <Link to="/registro/cliente" className="font-medium text-accent hover:text-accent-hover">
             Registre-se
           </Link>
         </p>

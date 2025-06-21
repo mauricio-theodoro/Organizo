@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -107,13 +108,13 @@ public class ProfissionalServiceImpl implements ProfissionalService {
     public ProfissionalDTO vincularServicos(Long profissionalId, Set<Long> servicoIds) {
         Profissional p = repo.findById(profissionalId)
                 // Lança exceção específica se não encontrar
-                .orElseThrow(() -> new ResourceNotFoundException("Profissional", "ID", profissionalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Profissional não encontrado", "ID", profissionalId));
 
         // Busca e valida todos os serviços antes de associar
         Set<Servico> servicos = servicoIds.stream()
                 .map(sid -> servRepo.findById(sid)
                         // Lança exceção específica se não encontrar
-                        .orElseThrow(() -> new ResourceNotFoundException("Serviço", "ID", sid)))
+                        .orElseThrow(() -> new ResourceNotFoundException("Serviço não encontrado", "ID", sid)))
                 .collect(Collectors.toSet());
         p.setServicos(servicos);
 
@@ -153,5 +154,21 @@ public class ProfissionalServiceImpl implements ProfissionalService {
             throw new ResourceNotFoundException("Profissional", "ID", id);
         }
         repo.deleteById(id);
+    }
+
+    @Override
+    public Page<ProfissionalDTO> listarPorSalaoEServico(
+            Long salaoId, Long servicoId, Pageable pageable) {
+
+        // 1) garante que o serviço existe naquele salão
+        Servico svc = servRepo.findById(servicoId)
+                .filter(s -> s.getSalao().getId().equals(salaoId))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Serviço não encontrado neste salão", "ID", servicoId));
+
+        // 2) busca paginada
+        return repo.findBySalaoIdAndServicos_Id(
+                        salaoId, servicoId, pageable)
+                .map(mapper::toDto);
     }
 }

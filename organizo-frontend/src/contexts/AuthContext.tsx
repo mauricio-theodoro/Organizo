@@ -83,7 +83,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
       }>(
         // Usa a variável de ambiente para a URL da API
         // O endpoint correto é /api/auth/login conforme SecurityConfig
-        `/auth/login`,
+        `/api/auth/login`,
         { email, senha }
         // Não precisa definir Content-Type aqui, Axios faz por padrão para JSON
       );

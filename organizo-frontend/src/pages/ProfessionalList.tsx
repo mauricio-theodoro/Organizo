@@ -35,7 +35,7 @@ export default function ProfessionalList() {
     setLoading(true); // Inicia o carregamento
     api.get<Paginated<Professional>>(
       // Endpoint da API para buscar profissionais por salão e serviço
-      `/saloes/${salonId}/servicos/${serviceId}/profissionais`,
+      `/api/saloes/${salonId}/servicos/${serviceId}/profissionais`,
       { params: { page, size: 6 } } // Parâmetros de paginação (página atual, tamanho da página)
     )
     .then(resp => setData(resp.data)) // Atualiza o estado com os dados recebidos

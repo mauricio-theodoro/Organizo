@@ -25,9 +25,6 @@ public class AgendamentoDTO {
     @NotNull(message = "profissionalId é obrigatório")
     private Long profissionalId;
 
-    @Schema(description = "ID do serviço", example = "2", required = true)
-    @NotNull(message = "servicoId é obrigatório")
-    private Long servicoId;
 
     @Schema(description = "Data e hora do agendamento",
             example = "2025-05-01T15:30:00", required = true)
@@ -70,12 +67,7 @@ public class AgendamentoDTO {
         this.profissionalId = profissionalId;
     }
 
-    public Long getServicoId() {
-        return servicoId;
-    }
-    public void setServicoId(Long servicoId) {
-        this.servicoId = servicoId;
-    }
+
 
     public LocalDateTime getDataHoraAgendada() {
         return dataHoraAgendada;

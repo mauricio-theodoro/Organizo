@@ -4,6 +4,7 @@ import com.organizo.organizobackend.dto.ProfissionalDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Set;
 
 
@@ -38,4 +39,9 @@ public interface ProfissionalService {
     ProfissionalDTO atualizar(Long id, ProfissionalDTO dto);
 
     void deletar(Long id);
+
+    /**
+     * Lista profissionais de um salão e serviço específicos com paginação.
+     */
+    Page<ProfissionalDTO> listarPorSalaoEServico(Long salaoId, Long servicoId, Pageable pageable);
 }

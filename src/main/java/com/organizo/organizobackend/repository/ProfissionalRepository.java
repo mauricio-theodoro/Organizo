@@ -20,4 +20,8 @@ public interface ProfissionalRepository extends JpaRepository<Profissional, Long
      * @param salaoId ID do salão
      */
     Page<Profissional> findBySalaoId(Long salaoId, Pageable pageable);
+
+    // Listar profissionais de um salão e serviço com paginação
+    Page<Profissional> findBySalaoIdAndServicos_Id(
+            Long salaoId, Long servicoId, Pageable pageable);
 }

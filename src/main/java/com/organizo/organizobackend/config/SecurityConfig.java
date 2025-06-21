@@ -1,6 +1,8 @@
 package com.organizo.organizobackend.config;
 
 import com.organizo.organizobackend.enums.Role;
+import com.organizo.organizobackend.security.JwtAuthenticationFilter;
+import com.organizo.organizobackend.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,8 +26,17 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthFilter jwtAuthFilter;
 
+    private final JwtTokenProvider tokenProvider;
+    private final CustomUserDetailsService userDetailsService;
+
+
+    public SecurityConfig(JwtTokenProvider p, CustomUserDetailsService uds) {
+        this.tokenProvider      = p;
+        this.userDetailsService = uds;
+    }
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        var jwtFilter = new JwtAuthenticationFilter(tokenProvider, userDetailsService);
         http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())

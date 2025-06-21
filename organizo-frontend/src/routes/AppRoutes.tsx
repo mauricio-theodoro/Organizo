@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthContext } from '../contexts/AuthContext';
+import RegistroCliente from '../pages/RegistroCliente';
 
 // Dashboards por perfil
 import ClienteDashboard from '../pages/ClienteDashboard';
@@ -103,8 +104,8 @@ export default function AppRoutes() {
       {/* Futura página de Contato */}
       <Route path="/contato" element={<p>Página de Contato (Em construção)</p>} />
 
-      {/* Futura página de Registro de Cliente */}
-      <Route path="/registro/cliente" element={<p>Página de Registro (Em construção)</p>} />
+            {/* Página de Registro de Cliente */}
+      <Route path="/registro/cliente" element={<RegistroCliente />} />
 
       {/* ==================================================================
           ROTAS PRIVADAS (Requerem login/token)

@@ -110,6 +110,7 @@ public class Servico {
     public Salao getSalao() {
         return salao;
     }
+    
     public void setSalao(Salao salao) {
         this.salao = salao;
     }

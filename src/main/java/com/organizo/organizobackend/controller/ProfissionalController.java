@@ -85,13 +85,12 @@ public class ProfissionalController {
 
     @Operation(summary = "Vincula serviços existentes a um profissional")
     @PreAuthorize("hasRole('DONO_SALAO')")
-    @PutMapping("/profissionais/{id}/servicos")
-    public ResponseEntity<ProfissionalDTO> vincularServicos(
-            @PathVariable Long id,
-            @RequestBody Set<Long> servicoIds
-    ) {
-        ProfissionalDTO atualizado = service.vincularServicos(id, servicoIds);
-        return ResponseEntity.ok(atualizado);
+    @PutMapping("/{id}/servicos")
+    public ResponseEntity<Void> vincularServicos(
+            @PathVariable("id") Long profissionalId,
+            @RequestBody Set<Long> servicoIds) {
+        service.vincularServicos(profissionalId, servicoIds);
+        return ResponseEntity.noContent().build();
     }
 
     /** Atualiza dados básicos de um profissional (sem lidar com serviços). */

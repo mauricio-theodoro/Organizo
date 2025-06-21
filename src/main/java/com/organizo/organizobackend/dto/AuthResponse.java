@@ -36,6 +36,8 @@ public class AuthResponse {
         this.role  = role;
     }
 
+    public record AuthResponseDTO(String token) { }
+
     // ===== Getters =====
 
     public String getToken() {
