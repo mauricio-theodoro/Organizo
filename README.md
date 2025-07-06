@@ -45,7 +45,7 @@ O objetivo é digitalizar e automatizar todo o fluxo de marcação de horários,
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/organizô.git
+   git clone https://github.com/mauricio-theodoro/organizô.git
    cd organizo
    ```
 
